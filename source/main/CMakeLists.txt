@@ -1,6 +1,53 @@
 project(RoR_Main)
 
+set(BIN_DIR ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/bin)
 set(TMP_FILE_DIR ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/tmp)
+set(TMP_LANG_DIR ${TMP_FILE_DIR}/languages)
+set(LANG_DIR ${CMAKE_BINARY_DIR}/languages)
+
+# Setup the Transifex CLI tool
+set(TRANSIFEX_API_KEY CACHE STRING "Your transifex api key")
+if (TRANSIFEX_API_KEY)
+    # Windows: setup gettext
+    file(MAKE_DIRECTORY ${LANG_DIR})
+    file(MAKE_DIRECTORY ${TMP_LANG_DIR})
+    if (WIN32)
+        include(FetchContent)
+        FetchContent_Populate(
+                gettext-win
+                URL https://github.com/mlocati/gettext-iconv-windows/releases/download/v0.19.8.1-v1.15/gettext0.19.8.1-iconv1.15-static-32.zip
+                SOURCE_DIR ${BIN_DIR}/gettext
+        )
+    endif (WIN32)
+
+    find_program(MSGFMT_EXE
+            msgfmt
+            PATHS ${BIN_DIR}/gettext/bin
+            )
+
+    find_program(PIP_EXE pip)
+
+    if (PIP_EXE-NOTFOUND)
+        message(WARNING "pip not found, please install python with pip")
+        execute_process(COMMAND easy_install pip)
+    endif ()
+
+    find_program(TX_EXE tx)
+    if (TX_EXE-NOTFOUND)
+        message(WARNING "transifex-client was not found, attempting to install it...\nPlease rerun cmake after it has finished")
+        execute_process(COMMAND ${PIP_EXE} install transifex-client)
+    else ()
+        message("Setting up transifex...")
+        execute_process(
+                COMMAND ${TX_EXE} init --token=${TRANSIFEX_API_KEY} --host=www.transifex.com --force --no-interactive 
+                COMMAND ${TX_EXE} set --auto-remote https://www.transifex.com/projects/p/rigs-of-rods
+                WORKING_DIRECTORY ${TMP_LANG_DIR}
+        )
+    endif ()
+else ()
+    message(WARNING "No transifex api key, wont install languages\nPlease get a api key here: https://www.transifex.com/user/settings/api/")
+endif ()
+
 
 ####################################################################################################
 #  SOURCE FILES
@@ -607,32 +654,37 @@ set(ROR_RESOURCES_ZIPS)
 set(TMP_RES_DIR ${TMP_FILE_DIR}/resources)
 file(MAKE_DIRECTORY ${TMP_RES_DIR})
 
-foreach(RES_DIR ${ROR_RESOURCES_DIRS})
+foreach (RES_DIR ${ROR_RESOURCES_DIRS})
 
-  file(GLOB ZIP_FILES RELATIVE "${CMAKE_SOURCE_DIR}/resources/${RES_DIR}" "${CMAKE_SOURCE_DIR}/resources/${RES_DIR}/*" )
-  set(ZIP_FILES_TXT "")
-  foreach(ZIP_FILE ${ZIP_FILES})
-     set(ZIP_FILES_TXT "${ZIP_FILES_TXT}${ZIP_FILE}\n")
-  endforeach()
-  file(WRITE "${TMP_FILE_DIR}/${RES_DIR}-filelist.txt" ${ZIP_FILES_TXT})
+    file(GLOB ZIP_FILES RELATIVE "${CMAKE_SOURCE_DIR}/resources/${RES_DIR}" "${CMAKE_SOURCE_DIR}/resources/${RES_DIR}/*")
+    set(ZIP_FILES_TXT "")
+    foreach (ZIP_FILE ${ZIP_FILES})
+        set(ZIP_FILES_TXT "${ZIP_FILES_TXT}${ZIP_FILE}\n")
+    endforeach ()
+    file(WRITE "${TMP_FILE_DIR}/${RES_DIR}-filelist.txt" ${ZIP_FILES_TXT})
 
-  set(ZIP_NAME "${TMP_RES_DIR}/${RES_DIR}.zip")
-  add_custom_command(
-    OUTPUT ${ZIP_NAME}
-    COMMAND ${CMAKE_COMMAND} -E tar "cfv" ${ZIP_NAME} --format=zip --files-from="${TMP_FILE_DIR}/${RES_DIR}-filelist.txt"
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/resources/${RES_DIR}"
-  )
-  list(APPEND ROR_RESOURCES_ZIPS ${ZIP_NAME})
-endforeach()
+    set(ZIP_NAME "${TMP_RES_DIR}/${RES_DIR}.zip")
+    add_custom_command(
+            OUTPUT ${ZIP_NAME}
+            COMMAND ${CMAKE_COMMAND} -E tar "cfv" ${ZIP_NAME} --format=zip --files-from="${TMP_FILE_DIR}/${RES_DIR}-filelist.txt"
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/resources/${RES_DIR}"
+    )
+    list(APPEND ROR_RESOURCES_ZIPS ${ZIP_NAME})
+endforeach ()
 
 # Copy resources needed for execution to the build directory
 add_custom_target(
-    zip_and_copy_resources
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${TMP_RES_DIR} $<TARGET_FILE_DIR:${BINNAME}>/resources
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/managed_materials $<TARGET_FILE_DIR:${BINNAME}>/resources/managed_materials
-    COMMENT "Zip and copy resources to build directory"
-    DEPENDS ${ROR_RESOURCES_ZIPS}
-    VERBATIM
+        zip_and_copy_resources
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${TMP_RES_DIR} $<TARGET_FILE_DIR:${BINNAME}>/resources
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/managed_materials $<TARGET_FILE_DIR:${BINNAME}>/resources/managed_materials
+        COMMAND ${TX_EXE} pull -a
+        COMMAND ${CMAKE_COMMAND} -DLANG_DIR=${LANG_DIR} -DTMP_LANG_DIR=${TMP_LANG_DIR} -DBIN_DIR=${BIN_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/Transifex.cmake
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${LANG_DIR} $<TARGET_FILE_DIR:${BINNAME}>/languages
+        COMMENT "Zip and copy resources to build directory"
+        DEPENDS ${ROR_RESOURCES_ZIPS}
+        WORKING_DIRECTORY ${TMP_LANG_DIR}
+        VERBATIM
+
 )
 
 IF (UNIX)
