@@ -10,6 +10,7 @@ find_package(AngelScript)
 find_package(CURL)
 find_package(Caelum)
 find_package(PagedGeometry)
+find_package(ModioSDK)
 
 if (WIN32)
     find_package(MoFileReader REQUIRED)
