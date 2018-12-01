@@ -41,18 +41,18 @@
 
 using namespace Ogre;
 
-int ErrorUtils::ShowError(Ogre::UTFString title, Ogre::UTFString err)
+void ErrorUtils::ShowError(Ogre::UTFString title, Ogre::UTFString err)
 {
     Ogre::UTFString infoText = _L("An internal error occured in Rigs of Rods.\n\nTechnical details below: \n\n");
-    return ErrorUtils::ShowMsgBox(_L("FATAL ERROR"), infoText + err, 0);
+    ErrorUtils::ShowMsgBox(_L("Internal error"), infoText + err, 0);
 }
 
-int ErrorUtils::ShowInfo(Ogre::UTFString title, Ogre::UTFString err)
+void ErrorUtils::ShowInfo(Ogre::UTFString title, Ogre::UTFString err)
 {
-    return ErrorUtils::ShowMsgBox(title, err, 1);
+    ErrorUtils::ShowMsgBox(title, err, 1);
 }
 
-int ErrorUtils::ShowMsgBox(Ogre::UTFString title, Ogre::UTFString err, int type)
+void ErrorUtils::ShowMsgBox(Ogre::UTFString title, Ogre::UTFString err, int type)
 {
     // we might call the ErrorUtils::ShowMsgBox without having ogre created yet!
     //LOG("message box: " + title + ": " + err);
@@ -65,8 +65,5 @@ int ErrorUtils::ShowMsgBox(Ogre::UTFString title, Ogre::UTFString err, int type)
 	printf("\n\n%s: %s\n\n", title.asUTF8_c_str(), err.asUTF8_c_str());
 #elif OGRE_PLATFORM == OGRE_PLATFORM_APPLE
 	printf("\n\n%s: %s\n\n", title.asUTF8_c_str(), err.asUTF8_c_str());
-    //CFOptionFlags flgs;
-    //CFUserNotificationDisplayAlert(0, kCFUserNotificationStopAlertLevel, NULL, NULL, NULL, T("A network error occured"), T("Bad server port."), NULL, NULL, NULL, &flgs);
 #endif
-    return 0;
 }

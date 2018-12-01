@@ -25,6 +25,8 @@
 #include "Application.h"
 #include "BeamConstants.h"
 #include "ConfigFile.h"
+#include "ErrorUtils.h"
+#include "GUIManager.h"
 #include "Utils.h"
 
 #include <algorithm>
@@ -173,13 +175,20 @@ bool RoR::OTCParser::LoadPageConfig(Ogre::DataStreamPtr &ds, RoR::OTCPage& page,
 void RoR::OTCParser::HandleException(const char* filename)
 {
     try { throw; } // Rethrow
-    catch (Ogre::Exception& e)
+    catch (Ogre::Exception& oex)
     {
-        LOG(std::string("[RoR|Terrain] Error reading OTC file '") + filename + "', message: " + e.getFullDescription());
+        RoR::LogFormat("[RoR|Terrain] %s, message: '%s', type: <Ogre::Exception>.", filename, oex.getFullDescription().c_str());
+        ErrorUtils::ShowError (filename, oex.getFullDescription());
     }
-    catch (std::exception& e)
+    catch (std::exception& stex)
     {
-        LOG(std::string("[RoR|Terrain] Error reading OTC file '") + filename + "', Message: " + e.what());
+        RoR::LogFormat("[RoR|Terrain] %s, message: '%s', type: <std::exception>.", filename, stex.what());
+        ErrorUtils::ShowError(filename, stex.what());
+    }
+    catch (...)
+    {
+        RoR::LogFormat("[RoR|Terrain] %s, unknown error occurred.", filename);
+        ErrorUtils::ShowError (filename, "Unknown error occurred");
     }
 }
 

@@ -248,11 +248,11 @@ void InstallCrashRpt()
     info.pszAppName = "Rigs of Rods";
     info.pszAppVersion = ROR_VERSION_STRING;
     info.pszEmailSubject = "Error Report for Rigs of Rods";
-    info.pszEmailTo = "error-report@rigsofrods.org";
+    info.pszEmailTo = "error-report@anotherfoxguy.com";
     info.pszUrl = "http://crashfix.rigsofrods.org/index.php/crashReport/uploadExternal";
-    info.uPriorities[CR_HTTP] = 1;                      // Use HTTP.
-    info.uPriorities[CR_SMTP] = CR_NEGATIVE_PRIORITY;   // Not user SMTP.
-    info.uPriorities[CR_SMAPI] = CR_NEGATIVE_PRIORITY;  // Not use Simple MAPI.
+    info.uPriorities[CR_HTTP] = 1;   // Use HTTP.
+    info.uPriorities[CR_SMTP] = 2;   // Use SMTP.
+    info.uPriorities[CR_SMAPI] = 3;  // Use Simple MAPI.
     info.dwFlags = CR_INST_AUTO_THREAD_HANDLERS; // Install the per-thread exception handlers automatically
     info.dwFlags |= CR_INST_ALL_POSSIBLE_HANDLERS; // Install all available exception handlers
     info.dwFlags |= CR_INST_SHOW_ADDITIONAL_INFO_FIELDS; // Makes "Your E-mail" and "Describe what you were doing when the problem occurred" fields of Error Report dialog always visible.
@@ -295,8 +295,8 @@ void InstallCrashRpt()
     crAddProperty("build_date", ROR_BUILD_DATE);
     crAddProperty("build_time", ROR_BUILD_TIME);
 
-    crAddProperty("System_GUID", SSETTING("GUID", "None").c_str());
-    crAddProperty("Multiplayer", RoR::App::mp_state.GetActive() ? "1" : "0");
+    //crAddProperty("System_GUID", SSETTING("GUID", "None").c_str());
+    //crAddProperty("Multiplayer", RoR::App::mp_state.GetActive() ? "1" : "0");
 
     crAddScreenshot2(CR_AS_MAIN_WINDOW, 0);
 }

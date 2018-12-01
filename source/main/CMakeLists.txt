@@ -567,6 +567,15 @@ elseif (TARGET Caelum::Caelum)
     target_compile_definitions(${BINNAME} PRIVATE USE_CAELUM)
 endif ()
 
+
+# --- CrashRpt ---
+if (DEFINED CONAN_CRASHRPT_ROOT AND ROR_USE_CRASHRPT)
+    target_link_libraries(${BINNAME} PRIVATE CONAN_PKG::CrashRpt)
+    target_include_directories(${BINNAME} PRIVATE CONAN_PKG::CrashRpt)
+    target_compile_definitions(${BINNAME} PRIVATE USE_CRASHRPT)
+endif ()
+
+
 set_target_properties(${BINNAME} PROPERTIES COTIRE_ADD_UNITY_BUILD FALSE)
 cotire(${BINNAME})
 

@@ -24,6 +24,7 @@
 #include "BeamFactory.h"
 #include "Collisions.h"
 #include "Dashboard.h"
+#include "ErrorUtils.h"
 #include "GUIManager.h"
 #include "GUI_LoadingWindow.h"
 #include "HydraxWater.h"
@@ -524,21 +525,21 @@ bool TerrainManager::HasPredefinedActors()
 
 void TerrainManager::HandleException(const char* summary)
 {
-    try
-    {
-        throw; // rethrow
-    }
+    try { throw; }// rethrow
     catch (Ogre::Exception& oex)
     {
         RoR::LogFormat("[RoR|Terrain] %s, message: '%s', type: <Ogre::Exception>.", summary, oex.getFullDescription().c_str());
+        ErrorUtils::ShowError(summary, oex.getFullDescription());
     }
     catch (std::exception& stex)
     {
         RoR::LogFormat("[RoR|Terrain] %s, message: '%s', type: <std::exception>.", summary, stex.what());
+        ErrorUtils::ShowError(summary, stex.what());
     }
     catch (...)
     {
         RoR::LogFormat("[RoR|Terrain] %s, unknown error occurred.", summary);
-    }
+        ErrorUtils::ShowError (summary, "Unknown error occurred");
+    }   
 }
 

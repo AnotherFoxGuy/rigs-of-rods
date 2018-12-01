@@ -42,6 +42,7 @@ void RoR::GUI::MessageBoxDialog::Draw()
     const bool was_visible = m_is_visible;
 
     // Draw window
+    ImGui::SetNextWindowSize(ImVec2 (800,600));
     ImGui::SetNextWindowContentWidth(300.f); // Initial size only
     ImGui::SetNextWindowPosCenter(ImGuiSetCond_Appearing); // Initial pos. only
     ImGui::Begin(m_title.c_str(), m_close_handle);
@@ -90,4 +91,3 @@ void RoR::GUI::MessageBoxDialog::Show(const char* title, const char* text, bool 
         m_close_handle = nullptr;
     }
 }
-

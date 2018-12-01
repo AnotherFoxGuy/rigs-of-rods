@@ -61,339 +61,328 @@ int main(int argc, char *argv[])
     curl_global_init(CURL_GLOBAL_ALL); // MUST init before any threads are started
 #endif
 
-    try
+    gEnv = &gEnvInstance;
+
+    // ### Detect system paths ###
+
+    // Process directory
+    std::string exe_path = RoR::GetExecutablePath();
+    if (exe_path.empty())
     {
-        gEnv = &gEnvInstance;
+        ErrorUtils::ShowError(_L("Startup error"), _L("Error while retrieving program directory path"));
+        return -1;
+    }
+    App::sys_process_dir.SetActive(RoR::GetParentDirectory(exe_path.c_str()).c_str());
 
-        // ### Detect system paths ###
-
-        // Process directory
-        std::string exe_path = RoR::GetExecutablePath();
-        if (exe_path.empty())
+    // RoR's home directory
+    Str<600> local_userdir;
+    local_userdir << App::sys_process_dir.GetActive() << PATH_SLASH << "config"; // TODO: Think of a better name, this is ambiguious with ~/.rigsofrods/config which stores configfiles! ~ only_a_ptr, 02/2018
+    if (FolderExists(local_userdir))
+    {
+        // It's a portable installation
+        App::sys_user_dir.SetActive(local_userdir);
+    }
+    else
+    {
+        // Default location - user's home directory
+        std::string user_home = RoR::GetUserHomeDirectory();
+        if (user_home.empty())
         {
-            ErrorUtils::ShowError(_L("Startup error"), _L("Error while retrieving program directory path"));
+            ErrorUtils::ShowError(_L("Startup error"), _L("Error while retrieving user directory path"));
             return -1;
         }
-        App::sys_process_dir.SetActive(RoR::GetParentDirectory(exe_path.c_str()).c_str());
+        RoR::Str<500> ror_homedir;
+#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
+        ror_homedir << user_home << PATH_SLASH << "Rigs of Rods " << ROR_VERSION_STRING_SHORT;
+#elif OGRE_PLATFORM == OGRE_PLATFORM_LINUX
+        ror_homedir << user_home << PATH_SLASH << ".rigsofrods";
+#elif OGRE_PLATFORM == OGRE_PLATFORM_APPLE
+        ror_homedir << user_home << PATH_SLASH << "RigsOfRods";
+#endif
+        App::sys_user_dir.SetActive(ror_homedir.ToCStr());
+    }
 
-        // RoR's home directory
-        Str<600> local_userdir;
-        local_userdir << App::sys_process_dir.GetActive() << PATH_SLASH << "config"; // TODO: Think of a better name, this is ambiguious with ~/.rigsofrods/config which stores configfiles! ~ only_a_ptr, 02/2018
-        if (FolderExists(local_userdir))
+    // ### Create OGRE default logger early. ###
+
+    Str<300> logs_dir;
+    logs_dir << App::sys_user_dir.GetActive() << PATH_SLASH << "logs";
+    if (!FolderExists(logs_dir.ToCStr()))
+    {
+        CreateFolder(logs_dir.ToCStr());
+    }
+    App::sys_logs_dir.SetActive(logs_dir);
+
+    auto ogre_log_manager = OGRE_NEW Ogre::LogManager();
+    Str<300> rorlog_path;
+    rorlog_path << logs_dir << PATH_SLASH << "RoR.log";
+    ogre_log_manager->createLog(Ogre::String(rorlog_path), true, true);
+    App::diag_trace_globals.SetActive(true); // We have logger -> we can trace.
+
+    // ### Setup program paths ###
+
+    if (! Settings::SetupAllPaths()) // Updates globals
+    {
+        ErrorUtils::ShowError(_L("Startup error"), _L("Resources folder not found. Check if correctly installed."));
+        return -1;
+    }
+
+    Settings::getSingleton().LoadRoRCfg(); // Main config file - path obtained from GVars
+
+    if (!FolderExists(App::sys_cache_dir.GetActive()))
+    {
+        CreateFolder(App::sys_cache_dir.GetActive());
+    }
+
+    // ### Process command-line arguments ###
+
+#if OGRE_PLATFORM != OGRE_PLATFORM_APPLE //MacOSX adds an extra argument in the form of -psn_0_XXXXXX when the app is double clicked
+    Settings::getSingleton().ProcessCommandLine(argc, argv);
+#endif
+
+    if (App::app_state.GetPending() == AppState::PRINT_HELP_EXIT)
+    {
+        ShowCommandLineUsage();
+        return 0;
+    }
+    if (App::app_state.GetPending() == AppState::PRINT_VERSION_EXIT)
+    {
+        ShowVersion();
+        return 0;
+    }
+
+#ifdef USE_CRASHRPT
+    InstallCrashRpt();
+#endif //USE_CRASHRPT
+
+    App::StartOgreSubsystem();
+    Ogre::OverlaySystem* overlay_system = new Ogre::OverlaySystem(); //Overlay init
+    Ogre::TextureManager::getSingleton().createManual ("EnvironmentTexture",
+        Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, Ogre::TEX_TYPE_CUBE_MAP, 256, 256, 0,
+        Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET);
+    Ogre::TextureManager::getSingleton ().createManual ("Refraction",
+        Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, Ogre::TEX_TYPE_2D, 512, 512, 0,
+        Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET);
+    Ogre::TextureManager::getSingleton ().createManual ("Reflection",
+        Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, Ogre::TEX_TYPE_2D, 512, 512, 0,
+        Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET);
+
+
+    App::CreateContentManager();
+
+    LanguageEngine::getSingleton().setup();
+
+    // Add startup resources
+    App::GetContentManager()->AddResourcePack(ContentManager::ResourcePack::OGRE_CORE);
+    App::GetContentManager()->AddResourcePack(ContentManager::ResourcePack::WALLPAPERS);
+
+    // Setup rendering (menu + simulation)
+    Ogre::SceneManager* scene_manager = App::GetOgreSubsystem()->GetOgreRoot()->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, "main_scene_manager");
+    gEnv->sceneManager = scene_manager;
+    if (overlay_system)
+    {
+        scene_manager->addRenderQueueListener(overlay_system);
+    }
+
+    Ogre::Camera* camera = scene_manager->createCamera("PlayerCam");
+    camera->setPosition(Ogre::Vector3(128, 25, 128)); // Position it at 500 in Z direction
+    camera->lookAt(Ogre::Vector3(0, 0, -300)); // Look back along -Z
+    camera->setNearClipDistance(0.5);
+    camera->setFarClipDistance(1000.0 * 1.733);
+    camera->setFOVy(Ogre::Degree(60));
+    camera->setAutoAspectRatio(true);
+    App::GetOgreSubsystem()->GetViewport()->setCamera(camera);
+    gEnv->mainCamera = camera;
+
+    Ogre::String menu_wallpaper_texture_name = GUIManager::getRandomWallpaperImage();
+
+    App::CreateCacheSystem(); // Reads GVars
+
+    // Initialize "managed materials"
+    // These are base materials referenced by user content
+    // They must be initialized before any content is loaded, including mod-cache update.
+    // Otherwise material links are unresolved and loading ends with an exception
+    // TODO: Study Ogre::ResourceLoadingListener and implement smarter solution (not parsing materials on cache refresh!)
+    App::GetContentManager()->InitManagedMaterials();
+
+    App::GetContentManager()->OnApplicationStartup();
+
+    App::CreateGuiManagerIfNotExists();
+
+    // Load and show menu wallpaper
+    MyGUI::VectorWidgetPtr v = MyGUI::LayoutManager::getInstance().loadLayout("wallpaper.layout");
+    MyGUI::Widget* menu_wallpaper_widget = nullptr;
+    if (!v.empty())
+    {
+        MyGUI::Widget* mainw = v.at(0);
+        if (mainw)
         {
-            // It's a portable installation
-            App::sys_user_dir.SetActive(local_userdir);
+            MyGUI::ImageBox* img = (MyGUI::ImageBox *)(mainw->getChildAt(0));
+            if (img)
+                img->setImageTexture(menu_wallpaper_texture_name);
+            menu_wallpaper_widget = mainw;
+        }
+    }
+
+#ifdef USE_ANGELSCRIPT
+    new ScriptEngine(); // Init singleton. TODO: Move under Application
+#endif
+
+    App::CreateInputEngine();
+    App::GetInputEngine()->setupDefault(App::GetOgreSubsystem()->GetMainHWND());
+
+    if (BSETTING("regen-cache-only", false)) //Can be usefull so we will leave it here -max98
+    {
+        App::GetContentManager()->RegenCache();
+        App::app_state.SetPending(AppState::SHUTDOWN);
+    }
+
+    App::GetCacheSystem()->Startup();
+
+    RoR::ForceFeedback force_feedback;
+#ifdef _WIN32
+    if (App::io_ffb_enabled.GetActive()) // Force feedback
+    {
+        if (App::GetInputEngine()->getForceFeedbackDevice())
+        {
+            force_feedback.Setup();
         }
         else
         {
-            // Default location - user's home directory
-            std::string user_home = RoR::GetUserHomeDirectory();
-            if (user_home.empty())
-            {
-                ErrorUtils::ShowError(_L("Startup error"), _L("Error while retrieving user directory path"));
-                return -1;
-            }
-            RoR::Str<500> ror_homedir;
-#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
-            ror_homedir << user_home << PATH_SLASH << "Rigs of Rods " << ROR_VERSION_STRING_SHORT;
-#elif OGRE_PLATFORM == OGRE_PLATFORM_LINUX
-            ror_homedir << user_home << PATH_SLASH << ".rigsofrods";
-#elif OGRE_PLATFORM == OGRE_PLATFORM_APPLE
-            ror_homedir << user_home << PATH_SLASH << "RigsOfRods";
-#endif
-            App::sys_user_dir.SetActive(ror_homedir.ToCStr());
+            LOG("No force feedback device detected, disabling force feedback");
+            App::io_ffb_enabled.SetActive(false);
         }
-
-        // ### Create OGRE default logger early. ###
-
-        Str<300> logs_dir;
-        logs_dir << App::sys_user_dir.GetActive() << PATH_SLASH << "logs";
-        if (!FolderExists(logs_dir.ToCStr()))
-        {
-            CreateFolder(logs_dir.ToCStr());
-        }
-        App::sys_logs_dir.SetActive(logs_dir);
-
-        auto ogre_log_manager = OGRE_NEW Ogre::LogManager();
-        Str<300> rorlog_path;
-        rorlog_path << logs_dir << PATH_SLASH << "RoR.log";
-        ogre_log_manager->createLog(Ogre::String(rorlog_path), true, true);
-        App::diag_trace_globals.SetActive(true); // We have logger -> we can trace.
-
-        // ### Setup program paths ###
-
-        if (! Settings::SetupAllPaths()) // Updates globals
-        {
-            ErrorUtils::ShowError(_L("Startup error"), _L("Resources folder not found. Check if correctly installed."));
-            return -1;
-        }
-
-        Settings::getSingleton().LoadRoRCfg(); // Main config file - path obtained from GVars
-
-        if (!FolderExists(App::sys_cache_dir.GetActive()))
-        {
-            CreateFolder(App::sys_cache_dir.GetActive());
-        }
-
-        // ### Process command-line arguments ###
-
-#if OGRE_PLATFORM != OGRE_PLATFORM_APPLE //MacOSX adds an extra argument in the form of -psn_0_XXXXXX when the app is double clicked
-        Settings::getSingleton().ProcessCommandLine(argc, argv);
-#endif
-
-        if (App::app_state.GetPending() == AppState::PRINT_HELP_EXIT)
-        {
-            ShowCommandLineUsage();
-            return 0;
-        }
-        if (App::app_state.GetPending() == AppState::PRINT_VERSION_EXIT)
-        {
-            ShowVersion();
-            return 0;
-        }
-
-#ifdef USE_CRASHRPT
-        InstallCrashRpt();
-#endif //USE_CRASHRPT
-
-        App::StartOgreSubsystem();
-        Ogre::OverlaySystem* overlay_system = new Ogre::OverlaySystem(); //Overlay init
-        Ogre::TextureManager::getSingleton().createManual ("EnvironmentTexture",
-            Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, Ogre::TEX_TYPE_CUBE_MAP, 256, 256, 0,
-            Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET);
-        Ogre::TextureManager::getSingleton ().createManual ("Refraction",
-            Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, Ogre::TEX_TYPE_2D, 512, 512, 0,
-            Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET);
-        Ogre::TextureManager::getSingleton ().createManual ("Reflection",
-            Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, Ogre::TEX_TYPE_2D, 512, 512, 0,
-            Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET);
-
-
-        App::CreateContentManager();
-
-        LanguageEngine::getSingleton().setup();
-
-        // Add startup resources
-        App::GetContentManager()->AddResourcePack(ContentManager::ResourcePack::OGRE_CORE);
-        App::GetContentManager()->AddResourcePack(ContentManager::ResourcePack::WALLPAPERS);
-
-        // Setup rendering (menu + simulation)
-        Ogre::SceneManager* scene_manager = App::GetOgreSubsystem()->GetOgreRoot()->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, "main_scene_manager");
-        gEnv->sceneManager = scene_manager;
-        if (overlay_system)
-        {
-            scene_manager->addRenderQueueListener(overlay_system);
-        }
-
-        Ogre::Camera* camera = scene_manager->createCamera("PlayerCam");
-        camera->setPosition(Ogre::Vector3(128, 25, 128)); // Position it at 500 in Z direction
-        camera->lookAt(Ogre::Vector3(0, 0, -300)); // Look back along -Z
-        camera->setNearClipDistance(0.5);
-        camera->setFarClipDistance(1000.0 * 1.733);
-        camera->setFOVy(Ogre::Degree(60));
-        camera->setAutoAspectRatio(true);
-        App::GetOgreSubsystem()->GetViewport()->setCamera(camera);
-        gEnv->mainCamera = camera;
-
-        Ogre::String menu_wallpaper_texture_name = GUIManager::getRandomWallpaperImage();
-
-        App::CreateCacheSystem(); // Reads GVars
-
-        // Initialize "managed materials"
-        // These are base materials referenced by user content
-        // They must be initialized before any content is loaded, including mod-cache update.
-        // Otherwise material links are unresolved and loading ends with an exception
-        // TODO: Study Ogre::ResourceLoadingListener and implement smarter solution (not parsing materials on cache refresh!)
-        App::GetContentManager()->InitManagedMaterials();
-
-        App::GetContentManager()->OnApplicationStartup();
-
-        App::CreateGuiManagerIfNotExists();
-
-        // Load and show menu wallpaper
-        MyGUI::VectorWidgetPtr v = MyGUI::LayoutManager::getInstance().loadLayout("wallpaper.layout");
-        MyGUI::Widget* menu_wallpaper_widget = nullptr;
-        if (!v.empty())
-        {
-            MyGUI::Widget* mainw = v.at(0);
-            if (mainw)
-            {
-                MyGUI::ImageBox* img = (MyGUI::ImageBox *)(mainw->getChildAt(0));
-                if (img)
-                    img->setImageTexture(menu_wallpaper_texture_name);
-                menu_wallpaper_widget = mainw;
-            }
-        }
-
-#ifdef USE_ANGELSCRIPT
-        new ScriptEngine(); // Init singleton. TODO: Move under Application
-#endif
-
-        App::CreateInputEngine();
-        App::GetInputEngine()->setupDefault(App::GetOgreSubsystem()->GetMainHWND());
-
-        if (BSETTING("regen-cache-only", false)) //Can be usefull so we will leave it here -max98
-        {
-            App::GetContentManager()->RegenCache();
-            App::app_state.SetPending(AppState::SHUTDOWN);
-        }
-
-        App::GetCacheSystem()->Startup();
-
-        RoR::ForceFeedback force_feedback;
-#ifdef _WIN32
-        if (App::io_ffb_enabled.GetActive()) // Force feedback
-        {
-            if (App::GetInputEngine()->getForceFeedbackDevice())
-            {
-                force_feedback.Setup();
-            }
-            else
-            {
-                LOG("No force feedback device detected, disabling force feedback");
-                App::io_ffb_enabled.SetActive(false);
-            }
-        }
+    }
 #endif // _WIN32
 
 #ifdef USE_MPLATFORM
-	    m_frame_listener->m_platform = new MPlatform_FD();
-	    if (m_frame_listener->m_platform)
-	    {
-		    m_platform->connect();
-	    }
+	m_frame_listener->m_platform = new MPlatform_FD();
+	if (m_frame_listener->m_platform)
+	{
+		m_platform->connect();
+	}
 #endif
 
-        RoR::App::GetInputEngine()->windowResized(App::GetOgreSubsystem()->GetRenderWindow());
+    RoR::App::GetInputEngine()->windowResized(App::GetOgreSubsystem()->GetRenderWindow());
 
-        MainMenu main_obj;
-        SkidmarkConfig skidmark_conf; // Loads 'skidmark.cfg' in constructor
+    MainMenu main_obj;
+    SkidmarkConfig skidmark_conf; // Loads 'skidmark.cfg' in constructor
 
-        // ### Main loop (switches application states) ###
+    // ### Main loop (switches application states) ###
 
-        AppState prev_app_state = App::app_state.GetActive();
-        App::app_state.SetPending(AppState::MAIN_MENU);
+    AppState prev_app_state = App::app_state.GetActive();
+    App::app_state.SetPending(AppState::MAIN_MENU);
 
-        if (App::mp_join_on_startup.GetActive() == true)
-        {
-            App::mp_state.SetPending(RoR::MpState::CONNECTED);
-        }
-        else if (!App::diag_preset_terrain.IsActiveEmpty())
-        {
-            App::app_state.SetPending(AppState::SIMULATION);
-        }
+    if (App::mp_join_on_startup.GetActive() == true)
+    {
+        App::mp_state.SetPending(RoR::MpState::CONNECTED);
+    }
+    else if (!App::diag_preset_terrain.IsActiveEmpty())
+    {
+        App::app_state.SetPending(AppState::SIMULATION);
+    }
 
-        while (App::app_state.GetPending() != AppState::SHUTDOWN)
-        {
-            if (App::app_state.GetPending() == AppState::MAIN_MENU)
+    while (App::app_state.GetPending() != AppState::SHUTDOWN)
+    {
+        if (App::app_state.GetPending() == AppState::MAIN_MENU)
            
-            {
-                App::app_state.ApplyPending();
+        {
+            App::app_state.ApplyPending();
 
 #ifdef USE_OPENAL
-                if (App::audio_menu_music.GetActive())
-                {
-                    SoundScriptManager::getSingleton().createInstance("tracks/main_menu_tune", -1, nullptr);
-                    SOUND_START(-1, SS_TRIG_MAIN_MENU);
-                }
+            if (App::audio_menu_music.GetActive())
+            {
+                SoundScriptManager::getSingleton().createInstance("tracks/main_menu_tune", -1, nullptr);
+                SOUND_START(-1, SS_TRIG_MAIN_MENU);
+            }
 #endif // USE_OPENAL
 
-                App::GetGuiManager()->ReflectGameState();
-                if (!App::mp_join_on_startup.GetActive() && BSETTING("SkipMainMenu", false))
-                {
-                    // MainMenu disabled (singleplayer mode) -> go directly to map selector (traditional behavior)
-                    if (App::diag_preset_terrain.IsActiveEmpty())
-                    {
-                        App::GetGuiManager()->SetVisible_GameMainMenu(false);
-                        App::GetGuiManager()->GetMainSelector()->Show(LT_Terrain);
-                    }
-                }
-
-                main_obj.EnterMainMenuLoop();
-            }
-            else if (App::app_state.GetPending() == AppState::SIMULATION)
+            App::GetGuiManager()->ReflectGameState();
+            if (!App::mp_join_on_startup.GetActive() && BSETTING("SkipMainMenu", false))
             {
-                { // Enclosing scope for SimController
-                    SimController sim_controller(&force_feedback, &skidmark_conf);
-                    App::SetSimController(&sim_controller);
-                    if (sim_controller.SetupGameplayLoop())
-                    {
-                        App::app_state.ApplyPending();
-                        App::GetGuiManager()->ReflectGameState();
-                        App::sim_state.SetActive(SimState::RUNNING);
-                        sim_controller.EnterGameplayLoop();
-                        App::SetSimController(nullptr);
+                // MainMenu disabled (singleplayer mode) -> go directly to map selector (traditional behavior)
+                if (App::diag_preset_terrain.IsActiveEmpty())
+                {
+                    App::GetGuiManager()->SetVisible_GameMainMenu(false);
+                    App::GetGuiManager()->GetMainSelector()->Show(LT_Terrain);
+                }
+            }
+
+            main_obj.EnterMainMenuLoop();
+        }
+        else if (App::app_state.GetPending() == AppState::SIMULATION)
+        {
+            { // Enclosing scope for SimController
+                SimController sim_controller(&force_feedback, &skidmark_conf);
+                App::SetSimController(&sim_controller);
+                if (sim_controller.SetupGameplayLoop())
+                {
+                    App::app_state.ApplyPending();
+                    App::GetGuiManager()->ReflectGameState();
+                    App::sim_state.SetActive(SimState::RUNNING);
+                    sim_controller.EnterGameplayLoop();
+                    App::SetSimController(nullptr);
 #ifdef USE_SOCKETW
-                        if (App::mp_state.GetActive() == MpState::CONNECTED)
-                        {
-                            RoR::Networking::Disconnect();
-                            App::GetGuiManager()->SetVisible_MpClientList(false);
-                        }
+                    if (App::mp_state.GetActive() == MpState::CONNECTED)
+                    {
+                        RoR::Networking::Disconnect();
+                        App::GetGuiManager()->SetVisible_MpClientList(false);
+                    }
 #endif // USE_SOCKETW
 #ifdef USE_MUMBLE
-                        if (App::GetMumble() != nullptr)
-                        {
-                            App::GetMumble()->SetNonPositionalAudio();
-                        }
-#endif // USE_MUMBLE
-                        menu_wallpaper_widget->setVisible(true);
-                    }
-                    else
+                    if (App::GetMumble() != nullptr)
                     {
-                        App::app_state.SetPending(AppState::MAIN_MENU);
+                        App::GetMumble()->SetNonPositionalAudio();
                     }
-                } // Enclosing scope for SimController
-                gEnv->sceneManager->clearScene(); // Wipe the scene after SimController was destroyed
-            }
-            prev_app_state = App::app_state.GetActive();
+#endif // USE_MUMBLE
+                    menu_wallpaper_widget->setVisible(true);
+                }
+                else
+                {
+                    App::app_state.SetPending(AppState::MAIN_MENU);
+                }
+            } // Enclosing scope for SimController
+            gEnv->sceneManager->clearScene(); // Wipe the scene after SimController was destroyed
+        }
+        prev_app_state = App::app_state.GetActive();
 
 
-        } // End of app state loop
+    } // End of app state loop
 
-        // ========================================================================
-        // Cleanup
-        // ========================================================================
+    // ========================================================================
+    // Cleanup
+    // ========================================================================
 
-        Settings::getSingleton().SaveSettings(); // Save RoR.cfg
+    Settings::getSingleton().SaveSettings(); // Save RoR.cfg
 
-        App::GetGuiManager()->GetMainSelector()->~MainSelector();
+    App::GetGuiManager()->GetMainSelector()->~MainSelector();
 
 #ifdef USE_SOCKETW
-        if (App::mp_state.GetActive() == MpState::CONNECTED)
-        {
-            RoR::Networking::Disconnect();
-        }
+    if (App::mp_state.GetActive() == MpState::CONNECTED)
+    {
+        RoR::Networking::Disconnect();
+    }
 #endif //SOCKETW
 
-        //TODO: we should destroy OIS here
-        //TODO: we could also try to destroy SoundScriptManager, but we don't care!
+    //TODO: we should destroy OIS here
+    //TODO: we could also try to destroy SoundScriptManager, but we don't care!
 
 #ifdef USE_MPLATFORM
-	    if (frame_listener->mplatform != nullptr)
-	    {
-		    if (frame_listener->mplatform->disconnect())
-		    {
-			    delete(frame_listener->mplatform);
-			    frame_listener->mplatform = nullptr;
-		    }
-	    }
+	if (frame_listener->mplatform != nullptr)
+	{
+		if (frame_listener->mplatform->disconnect())
+		{
+			delete(frame_listener->mplatform);
+			frame_listener->mplatform = nullptr;
+		}
+	}
 #endif
 
-        scene_manager->destroyCamera(camera);
-        App::GetOgreSubsystem()->GetOgreRoot()->destroySceneManager(scene_manager);
+    scene_manager->destroyCamera(camera);
+    App::GetOgreSubsystem()->GetOgreRoot()->destroySceneManager(scene_manager);
 
-        App::DestroyOverlayWrapper();
+    App::DestroyOverlayWrapper();
 
-        App::DestroyContentManager();
-    }
-    catch (Ogre::Exception& e)
-    {
-        ErrorUtils::ShowError(_L("An exception has occured!"), e.getFullDescription());
-    }
-    catch (std::runtime_error& e)
-    {
-        ErrorUtils::ShowError(_L("An exception (std::runtime_error) has occured!"), e.what());
-    }
+    App::DestroyContentManager();
 
 #ifdef USE_CRASHRPT
     UninstallCrashRpt();

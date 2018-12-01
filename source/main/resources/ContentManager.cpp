@@ -428,6 +428,6 @@ void ContentManager::RegenCache()
     }
     str = str + _L("\n(These stats can be imprecise)");
 
-    ErrorUtils::ShowError(_L("Cache regeneration done"), str);
+    ErrorUtils::ShowInfo(_L("Cache regeneration done"), str);
 }
 
