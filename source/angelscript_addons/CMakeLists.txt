@@ -16,9 +16,4 @@ elseif (TARGET AngelScript::AngelScript)
      AngelScript::AngelScript
      AngelScript::use_namespace
   )
-else ()
-    message(WARNING "Building angelscript_addons without AngelScript. Some functionality may be missing.")
 endif ()
-
-set_target_properties(angelscript_addons PROPERTIES COTIRE_ADD_UNITY_BUILD FALSE)
-cotire(angelscript_addons)
