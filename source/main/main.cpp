@@ -41,6 +41,7 @@
 #include "SoundScriptManager.h"
 
 #include <Overlay/OgreOverlaySystem.h>
+#include <Bites/OgreSGTechniqueResolverListener.h>
 #include <string>
 
 #ifdef USE_CURL
@@ -198,12 +199,22 @@ int main(int argc, char *argv[])
 
         // Setup rendering (menu + simulation)
         Ogre::SceneManager* scene_manager = App::GetOgreSubsystem()->GetOgreRoot()->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, "main_scene_manager");
+
+        // register our scene with the RTSS
+        Ogre::RTShader::ShaderGenerator::initialize ();  
+        Ogre::RTShader::ShaderGenerator* shadergen = Ogre::RTShader::ShaderGenerator::getSingletonPtr ();
+
+        // Create and register the material manager listener if it doesn't exist yet.
+        auto mMaterialMgrListener = new OgreBites::SGTechniqueResolverListener (shadergen);
+        Ogre::MaterialManager::getSingleton ().addListener (mMaterialMgrListener);
+
+        shadergen->addSceneManager (scene_manager);
+
         gEnv->sceneManager = scene_manager;
         if (overlay_system)
         {
-            scene_manager->addRenderQueueListener(overlay_system);
+            scene_manager->addRenderQueueListener (overlay_system);
         }
-
         Ogre::Camera* camera = scene_manager->createCamera("PlayerCam");
         camera->setPosition(Ogre::Vector3(128, 25, 128)); // Position it at 500 in Z direction
         camera->lookAt(Ogre::Vector3(0, 0, -300)); // Look back along -Z
