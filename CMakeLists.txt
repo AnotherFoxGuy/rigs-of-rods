@@ -20,6 +20,7 @@ project(${PROJECT_NAME_UNDERSCORE})
 ################################################################################
 option(BUILD_DEV_VERSION "Disable this for official releases" ON)
 option(BUILD_DOC_DOXYGEN "Build documentation from sources with Doxygen" OFF)
+option(BUILD_DOC_LATEX "Build the beginners-guide with LaTeX" OFF)
 option(USE_PHC "Use a Precompiled header for speeding up the build" ON)
 set(ROR_DEPENDENCY_DIR "${CMAKE_SOURCE_DIR}/dependencies" CACHE PATH "Path to the dependencies")
 
