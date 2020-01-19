@@ -19,6 +19,7 @@ project(${PROJECT_NAME_UNDERSCORE})
 ################################################################################
 option(BUILD_DEV_VERSION "Disable this for official releases" ON)
 option(BUILD_DOC_DOXYGEN "Build documentation from sources with Doxygen" OFF)
+option(BUILD_DOC_LATEX "Build the beginners-guide with LaTeX" OFF)
 option(BUILD_REDIST_FOLDER "Build a folder for redistributing the game" OFF)
 option(USE_PACKAGE_MANAGER "Use conan for managing packages" ON)
 

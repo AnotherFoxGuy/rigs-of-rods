@@ -22,3 +22,11 @@ if( BUILD_DOC_DOXYGEN )
     VERBATIM
   )
 endif()
+
+####################################################################################################
+# Beginners-guide and keysheet 
+####################################################################################################
+if( BUILD_DOC_LATEX )
+  include(UseLATEX)
+  add_latex_document(manual.tex IMAGE_DIRS images INPUTS beginers-guide.tex controls-config.tex installing-content.tex)
+endif()
