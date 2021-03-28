@@ -4,7 +4,7 @@ set(rgx "[A-Za-z0-9.+_-]+.so[0-9.]*")
 set(out_dir "${CMAKE_SOURCE_DIR}/redist/lib/")
 file(MAKE_DIRECTORY ${out_dir})
 
-set(excludelist_url "https://cdn.statically.io/gh/AppImage/pkg2appimage/master/excludelist")
+set(excludelist_url "https://raw.githubusercontent.com/AppImage/pkg2appimage/master/excludelist")
 execute_process(COMMAND  bash -c "curl -s -L ${excludelist_url} | sed 's|#.*||g'" OUTPUT_VARIABLE excludelist)
 string(REPLACE "\n" ";" excludelist ${excludelist})
 
