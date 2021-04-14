@@ -6,7 +6,7 @@ on: [ push, pull_request ]
 jobs:
   build-gcc:
     name: Linux build on Ubuntu
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -59,15 +59,6 @@ jobs:
         run: cmake -P ./tools/CI/copy_libs.cmake
         shell: bash
 
-      - name: Upload build to itch.io
-        env:
-          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-        if: env.BUTLER_API_KEY != null && github.ref == 'refs/heads/master'
-        run: |
-          curl "https://raw.githubusercontent.com/AnotherFoxGuy/ci-scripts/main/install-butler.sh" | sudo bash
-          butler push redist rigs-of-rods/rigs-of-rods-dev:linux-ci --userversion CIBuild-${GITHUB_RUN_NUMBER}-commit-${GITHUB_SHA}
-        shell: bash
-
       - name: Upload redist folder
         uses: actions/upload-artifact@v4
         with:
@@ -114,15 +105,6 @@ jobs:
         run: |
           cd build
           ninja install
-        shell: cmd
-
-      - name: Upload build to itch.io
-        env:
-          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-        if: env.BUTLER_API_KEY != null && github.ref == 'refs/heads/master'
-        run: |
-          choco install butler -y
-          butler push redist rigs-of-rods/rigs-of-rods-dev:windows-ci --userversion CIBuild-%GITHUB_RUN_NUMBER%-Commit-%GITHUB_SHA%
         shell: cmd
 
       - name: Upload redist folder
