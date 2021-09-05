@@ -551,6 +551,11 @@ else ()
 endif ()
 
 
+INSTALL(CODE "
+   include(BundleUtilities)
+   fixup_bundle(\"${BINNAME}\"   \"\"   \"${RUNTIME_OUTPUT_DIRECTORY}\")
+   " COMPONENT Runtime)
+
 #  CPack
 # -----------------------
 set(CPACK_PACKAGE_DESCRIPTION "Rigs of Rods soft-body physics simulator")
