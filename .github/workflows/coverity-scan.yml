@@ -1,0 +1,74 @@
+name: Coverity
+
+on: [push]
+
+jobs:
+  Coverity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Download Coverity Build Tool
+        env:
+          COVERITY_SCAN_TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+        run: |
+          wget -nv https://scan.coverity.com/download/cxx/linux64 --post-data "token=$COVERITY_SCAN_TOKEN&project=RigsOfRods/rigs-of-rods" -O cov-analysis-linux64.tar.gz
+          mkdir cov-analysis-linux64
+          tar xzf cov-analysis-linux64.tar.gz --strip 1 -C cov-analysis-linux64
+
+      - name: Cache conan
+        uses: actions/cache@v4
+        with:
+          key: conan-coverity-${{ hashFiles('conanfile.py') }}
+          path: ~/.conan2/
+
+      - name: Install dependencies
+        run: |
+          curl "https://raw.githubusercontent.com/AnotherFoxGuy/ci-scripts/main/install-conan.sh" | sudo bash
+          sudo apt-get update
+          sudo apt-get -y install \
+                  pkg-config \
+                  ninja-build \
+                  nvidia-cg-toolkit \
+                  libfreetype6-dev \
+                  libfreeimage-dev \
+                  libzzip-dev \
+                  libois-dev \
+                  libgl1-mesa-dev \
+                  libglu1-mesa-dev \
+                  libx11-dev \
+                  libxt-dev \
+                  libxaw7-dev \
+                  libxrandr-dev \
+                  libopenjp2-7-dev
+
+      - name: Configure
+        run: |
+          conan profile detect --force
+          echo "tools.system.package_manager:mode = install" > ~/.conan2/global.conf
+          echo "tools.system.package_manager:sudo = True" >> ~/.conan2/global.conf
+          conan remote add ror-conan https://git.anotherfoxguy.com/api/packages/rorbot/conan -f
+          conan install . -s build_type=Debug -b missing -pr:b=default
+          cmake --preset conan-debug -DUSE_PCH=OFF
+
+      - name: Build with cov-build
+        run: |
+          export PATH=`pwd`/cov-analysis-linux64/bin:$PATH
+          cov-build --dir cov-int make -j4
+
+      - name: Submit the result to Coverity Scan
+        env:
+          COVERITY_SCAN_TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+        run: |
+          export SHA=`git rev-parse --short HEAD`
+          tar czvf rigs-of-rods.tgz cov-int
+          curl \
+            --form project=RigsOfRods/rigs-of-rods \
+            --form token=$COVERITY_SCAN_TOKEN \
+            --form email=edgar@anotherfoxguy.com 	 \
+            --form file=@rigs-of-rods.tgz \
+            --form version=$SHA \
+            --form description="rigs of rods gh-actions build" \
+            https://scan.coverity.com/builds
