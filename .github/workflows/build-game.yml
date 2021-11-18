@@ -4,76 +4,9 @@ name: Build game
 on: [ push, pull_request ]
 
 jobs:
-  build-gcc:
-    name: Linux build on Ubuntu
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2.3.5
-        with:
-          submodules: true
-
-      - name: Cache conan
-        uses: actions/cache@v2.1.6
-        with:
-          key: conan-${{ hashFiles('cmake/DependenciesConfig.cmake') }}
-          path: ~/.conan/
-
-      - name: Install dependencies
-        run: |
-          curl "https://raw.githubusercontent.com/AnotherFoxGuy/ci-scripts/main/install-conan.sh" | sudo bash
-          sudo apt-get update
-          sudo apt-get -y install \
-                  pkg-config \
-                  ninja-build \
-                  nvidia-cg-toolkit \
-                  libfreetype6-dev \
-                  libfreeimage-dev \
-                  libzzip-dev \
-                  libois-dev \
-                  libgl1-mesa-dev \
-                  libglu1-mesa-dev \
-                  libx11-dev \
-                  libxt-dev \
-                  libxaw7-dev \
-                  libxrandr-dev \
-                  libopenjp2-7-dev
-
-        shell: bash
-
-      - name: Configure
-        run: cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=redist .
-        shell: bash
-
-      - name: Build
-        run: ninja install
-        shell: bash
-
-      - name: Copy *.so files
-        run: cmake -P ./tools/CI/copy_libs.cmake
-        shell: bash
-
-      - name: Upload build to itch.io
-        env:
-          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-        if: env.BUTLER_API_KEY != null && github.ref == 'refs/heads/master'
-        run: |
-          curl "https://raw.githubusercontent.com/AnotherFoxGuy/ci-scripts/main/install-butler.sh" | sudo bash
-          butler push redist rigs-of-rods/rigs-of-rods-dev:linux-ci --userversion CIBuild-${GITHUB_RUN_NUMBER}-commit-${GITHUB_SHA}
-        shell: bash
-
-      - name: Upload redist folder
-        uses: actions/upload-artifact@v2
-        with:
-          name: ror-linux
-          path: redist
-
-      - name: Clean Conan pkgs
-        run: conan remove "*" -fsb
-        shell: bash
-
   build-msvc:
     name: Windows build
-    runs-on: windows-2016
+    runs-on: windows-2022
     env:
       DXSDK_DIR: C:\apps\Microsoft DirectX SDK\
       BUILD_TOOLS_PATH: C:\apps\build-tools\
@@ -109,15 +42,6 @@ jobs:
 
       - name: Build
         run: ninja install
-        shell: cmd
-
-      - name: Upload build to itch.io
-        env:
-          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-        if: env.BUTLER_API_KEY != null && github.ref == 'refs/heads/master'
-        run: |
-          choco install butler -y
-          butler push redist rigs-of-rods/rigs-of-rods-dev:windows-ci --userversion CIBuild-%GITHUB_RUN_NUMBER%-Commit-%GITHUB_SHA%
         shell: cmd
 
       - name: Upload redist folder
