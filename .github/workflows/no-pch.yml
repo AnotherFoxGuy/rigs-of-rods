@@ -1,0 +1,69 @@
+---
+name: Build game without PCH
+
+on: [push, pull_request]
+
+jobs:
+  build-gcc:
+    name: Linux build on Ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Prepare sccache timestamp
+        id: sccache_cache_timestamp
+        shell: cmake -P {0}
+        run: |
+          string(TIMESTAMP current_date "%Y-%m-%d-%H-%M-%S" UTC)
+          message("::set-output name=timestamp::${current_date}")
+      - name: sccache cache files
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/sccache
+          key: ubuntu-sccache-${{ steps.sccache_cache_timestamp.outputs.timestamp }}
+          restore-keys: |
+            ubuntu-sccache-
+
+      - name: Cache conan
+        uses: actions/cache@v3
+        with:
+          key: conan-${{ hashFiles('cmake/DependenciesConfig.cmake') }}
+          path: ~/.conan/
+
+      - name: Install dependencies
+        run: |
+          curl "https://raw.githubusercontent.com/AnotherFoxGuy/ci-scripts/main/install-conan.sh" | sudo bash
+          curl "https://raw.githubusercontent.com/AnotherFoxGuy/ci-scripts/main/install-sccache.sh" | sudo bash
+          sudo apt-get update
+          sudo apt-get -y install \
+                  pkg-config \
+                  nvidia-cg-toolkit \
+                  libfreetype6-dev \
+                  libfreeimage-dev \
+                  libzzip-dev \
+                  libois-dev \
+                  libgl1-mesa-dev \
+                  libglu1-mesa-dev \
+                  libx11-dev \
+                  libxt-dev \
+                  libxaw7-dev \
+                  libxrandr-dev \
+                  libopenjp2-7-dev
+
+        shell: bash
+
+      - name: Configure
+        run: cmake -DCMAKE_BUILD_TYPE=Release -DUSE_PHC=OFF .
+        shell: bash
+
+      - name: Build
+        run: | 
+          make -j4
+          sccache --show-stats
+        shell: bash
+
+      - name: Clean Conan pkgs
+        run: conan remove "*" -fsb
+        shell: bash
