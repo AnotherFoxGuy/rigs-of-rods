@@ -73,7 +73,7 @@ jobs:
 
   build-msvc:
     name: Windows build
-    runs-on: windows-2019
+    runs-on: windows-latest
     env:
       BUILD_TOOLS_PATH: C:\apps\build-tools\
     steps:
