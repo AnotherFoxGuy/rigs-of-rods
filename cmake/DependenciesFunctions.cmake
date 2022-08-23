@@ -3,8 +3,8 @@ include(conan)
 include(FindPkgConfig)
 
 if (USE_PACKAGE_MANAGER)
-    conan_add_remote(NAME rigs-of-rods-deps-V2
-            URL https://artifactory.anotherfoxguy.com/artifactory/api/conan/rigs-of-rods
+    conan_add_remote(NAME conan-afg
+            URL https://conan.anotherfoxguy.com
             VERIFY_SSL True
             )
 endif ()
