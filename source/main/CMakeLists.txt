@@ -398,7 +398,7 @@ if (USE_OPENAL)
 endif ()
 
 if (USE_DISCORDGAMESDK)
-    target_link_libraries(${BINNAME} PRIVATE Discord::SDK)
+    target_link_libraries(${BINNAME} PRIVATE internal_discord_game_sdk)
     target_compile_definitions(${BINNAME} PRIVATE USE_DISCORD_RPC)
 endif ()
 
