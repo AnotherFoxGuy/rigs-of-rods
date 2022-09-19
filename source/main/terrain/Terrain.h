@@ -109,6 +109,8 @@ private:
     void fixCompositorClearColor();
     void loadTerrainObjects();
 
+    void GenerateNavmesh();
+
     // Managers
 
     TerrainObjectManager*   m_object_manager;

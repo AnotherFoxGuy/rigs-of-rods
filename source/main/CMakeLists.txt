@@ -431,6 +431,10 @@ if (USE_PAGED)
     target_link_libraries(${BINNAME} PRIVATE PagedGeometry::PagedGeometry)
     target_compile_definitions(${BINNAME} PRIVATE USE_PAGED)
 endif ()
+if (USE_OGRECROWD)
+    target_link_libraries(${BINNAME} PRIVATE OgreCrowd::OgreCrowd)
+    target_compile_definitions(${BINNAME} PRIVATE USE_RECAST)
+endif ()
 
 
 if (USE_PHC)

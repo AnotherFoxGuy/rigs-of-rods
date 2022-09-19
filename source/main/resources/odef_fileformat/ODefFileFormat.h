@@ -125,6 +125,7 @@ struct ODefFile
     }                             header;
 
     bool                          mode_standard = false;
+    bool                          is_navigable = false;
     std::vector<LocalizerType>    localizers;
     std::list<std::string>        sounds;
     std::list<std::string>        groundmodel_files;

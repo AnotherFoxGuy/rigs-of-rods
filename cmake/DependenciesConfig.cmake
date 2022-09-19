@@ -75,6 +75,14 @@ add_external_lib(
         CONAN_PKG_NAME PagedGeometry
         SYMBOL PAGED
 )
+add_external_lib(
+        OgreCrowd
+        # Temporary switch back to the rigs of rods version, since the OGRE version is broken
+        ogre3d-crowd/2022.09@anotherfoxguy/stable
+        # PKG_CONFIG "Caelum >= 0.6.3"
+        CONAN_PKG_NAME OgreCrowd
+        FIND_PACKAGE
+)
 
 add_external_lib(
         fmt

@@ -39,8 +39,9 @@
 #include "TerrainObjectManager.h"
 #include "Water.h"
 
-#include <Terrain/OgreTerrainPaging.h>
+#include <OgreRecast.h>
 #include <Terrain/OgreTerrainGroup.h>
+#include <Terrain/OgreTerrainPaging.h>
 
 using namespace RoR;
 using namespace Ogre;
@@ -225,6 +226,8 @@ RoR::Terrain* RoR::Terrain::LoadAndPrepareTerrain(CacheEntry* entry)
     LOG(" ===== LOADING TERRAIN ACTORS " + filename);
     loading_window->SetProgress(95, _L("Loading Terrain Actors"));
     terrn_mgr->LoadPredefinedActors();
+
+    terrn_mgr->GenerateNavmesh();
 
     LOG(" ===== TERRAIN LOADING DONE " + filename);
 
@@ -562,3 +565,18 @@ void RoR::Terrain::HandleException(const char* summary)
     }
 }
 
+void RoR::Terrain::GenerateNavmesh()
+{
+  // RECAST (navmesh creation)
+  // Create the navmesh and show it
+  auto mRecast = new OgreRecast(App::GetGfxScene()->GetSceneManager()); // Use default configuration
+  // Simple recast navmesh build example
+
+  if (mRecast->NavMeshBuild(m_object_manager->GetNavmeshEntities())) {
+    mRecast->drawNavMesh();
+  } else {
+    Ogre::LogManager::getSingletonPtr()->logMessage(
+        "ERROR: could not generate useable navmesh from mesh.");
+  }
+
+}

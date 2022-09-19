@@ -295,6 +295,11 @@ bool ODefParser::ProcessCurrentLine()
     {
         m_def->header.cast_shadows = false;
     }
+    else if (line_str == "navigable")
+    {
+        m_def->is_navigable = true;
+    }
+
 
     return true;
 }

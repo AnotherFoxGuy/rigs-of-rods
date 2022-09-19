@@ -68,6 +68,8 @@ TerrainObjectManager::TerrainObjectManager(Terrain* terrainManager) :
     //prepare for baking
     m_staticgeometry_bake_node = App::GetGfxScene()->GetSceneManager()->getRootSceneNode()->createChildSceneNode();
 
+    m_navmesh_node = App::GetGfxScene()->GetSceneManager()->getRootSceneNode()->createChildSceneNode("NavmeshNode");
+
     // terrain custom group
     m_resource_group = terrainManager->GetDef().name + "-TerrnObjects";
     Ogre::ResourceGroupManager::getSingleton().createResourceGroup(m_resource_group);
@@ -683,6 +685,18 @@ void TerrainObjectManager::LoadTerrainObject(const Ogre::String& name, const Ogr
             odefname,
             cmesh.mesh_name, pos, tenode->getOrientation(),
             cmesh.scale, gm, &(obj->collTris));
+
+        if(odef->is_navigable)
+        {
+            Ogre::SceneNode *node = m_navmesh_node->createChildSceneNode();
+            Ogre::Entity *ent = App::GetGfxScene()->GetSceneManager()->createEntity(cmesh.mesh_name);
+            node->attachObject(ent);
+            node->setOrientation(tenode->getOrientation());
+            node->setPosition(pos);
+            node->setScale(cmesh.scale);
+            ent->setVisible(false);
+            m_map_navmesh_entities.push_back(ent);
+        }
     }
 
     for (ODefParticleSys& psys : odef->particle_systems)
