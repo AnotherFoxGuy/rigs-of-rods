@@ -29,7 +29,7 @@
 #include "EngineSim.h"
 #include "Terrain.h"
 #include "GfxScene.h"
-#include "GUIManager.h."
+#include "GUIManager.h"
 
 #include "scriptdictionary/scriptdictionary.h"
 
