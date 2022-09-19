@@ -689,7 +689,7 @@ void GameContext::CreatePlayerCharacter()
     }
 }
 
-Character* GameContext::GetPlayerCharacter() // Convenience ~ counterpart of `GetPlayerActor()`
+RoR::Character* GameContext::GetPlayerCharacter() // Convenience ~ counterpart of `GetPlayerActor()`
 {
     return m_character_factory.GetLocalCharacter();
 }

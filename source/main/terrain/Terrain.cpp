@@ -42,6 +42,9 @@
 #include <OgreRecast.h>
 #include <Terrain/OgreTerrainGroup.h>
 #include <Terrain/OgreTerrainPaging.h>
+#include <TestCharacter.h>
+
+#include "CrowdManager.h"
 
 using namespace RoR;
 using namespace Ogre;
@@ -190,11 +193,6 @@ RoR::Terrain* RoR::Terrain::LoadAndPrepareTerrain(CacheEntry* entry)
     loading_window->SetProgress(60, _L("Initializing Collision Subsystem"));
     terrn_mgr->m_collisions = new Collisions(terrn_mgr->getMaxTerrainSize());
 
-    loading_window->SetProgress(75, _L("Initializing Script Subsystem"));
-    App::SetSimTerrain(terrn_mgr.get()); // Hack for GameScript::spawnObject()
-    terrn_mgr->initScripting();
-    App::SetSimTerrain(nullptr); // END Hack for GameScript::spawnObject()
-
     loading_window->SetProgress(77, _L("Initializing Water Subsystem"));
     terrn_mgr->initWater();
 
@@ -223,11 +221,16 @@ RoR::Terrain* RoR::Terrain::LoadAndPrepareTerrain(CacheEntry* entry)
     App::GetGuiManager()->SurveyMap.CreateTerrainTextures(); // Should be done before actors are loaded, otherwise they'd show up in the static texture
     App::SetSimTerrain(nullptr); // END Hack for the SurveyMapTextureCreator
 
+    terrn_mgr->GenerateNavmesh();
+
+    loading_window->SetProgress(75, _L("Initializing Script Subsystem"));
+    App::SetSimTerrain(terrn_mgr.get()); // Hack for GameScript::spawnObject()
+    terrn_mgr->initScripting();
+    App::SetSimTerrain(nullptr); // END Hack for GameScript::spawnObject()
+
     LOG(" ===== LOADING TERRAIN ACTORS " + filename);
     loading_window->SetProgress(95, _L("Loading Terrain Actors"));
     terrn_mgr->LoadPredefinedActors();
-
-    terrn_mgr->GenerateNavmesh();
 
     LOG(" ===== TERRAIN LOADING DONE " + filename);
 
@@ -567,16 +570,21 @@ void RoR::Terrain::HandleException(const char* summary)
 
 void RoR::Terrain::GenerateNavmesh()
 {
-  // RECAST (navmesh creation)
-  // Create the navmesh and show it
-  auto mRecast = new OgreRecast(App::GetGfxScene()->GetSceneManager()); // Use default configuration
-  // Simple recast navmesh build example
+    // RECAST (navmesh creation)
+    // Create the navmesh and show it
+    auto mRecast = new OgreRecast(App::GetGfxScene()->GetSceneManager()); // Use default configuration
+    // Simple recast navmesh build example
 
-  if (mRecast->NavMeshBuild(m_collisions->GetNavmeshEntities())) {
-    mRecast->drawNavMesh();
-  } else {
-    Ogre::LogManager::getSingletonPtr()->logMessage(
-        "ERROR: could not generate useable navmesh from mesh.");
-  }
+    if (mRecast->NavMeshBuild(m_collisions->GetNavmeshEntities())) {
+      mRecast->drawNavMesh();
+    } else {
+      Ogre::LogManager::getSingletonPtr()->logMessage(
+          "ERROR: could not generate useable navmesh from mesh.");
+    }
+
+
+    // DETOUR CROWD (local steering for independent agents)
+    // Create a first agent that always starts at begin position
+    mDetourCrowd = new OgreDetourCrowd(mRecast);
 
 }

@@ -40,7 +40,7 @@ using namespace RoR;
 
 #define LOGSTREAM Ogre::LogManager::getSingleton().stream()
 
-Character::Character(int source, unsigned int streamid, UTFString player_name, int color_number, bool is_remote) :
+RoR::Character::Character(int source, unsigned int streamid, UTFString player_name, int color_number, bool is_remote) :
       m_actor_coupling(nullptr)
     , m_can_jump(false)
     , m_character_rotation(0.0f)
@@ -68,7 +68,7 @@ Character::Character(int source, unsigned int streamid, UTFString player_name, i
     }
 }
 
-Character::~Character()
+RoR::Character::~Character()
 {
     if (m_gfx_character != nullptr)
     {
@@ -77,30 +77,30 @@ Character::~Character()
     }
 }
 
-void Character::updateCharacterRotation()
+void RoR::Character::updateCharacterRotation()
 {
     setRotation(m_character_rotation);
 }
 
-void Character::setPosition(Vector3 position) // TODO: updates OGRE objects --> belongs to GfxScene ~ only_a_ptr, 05/2018
+void RoR::Character::setPosition(Vector3 position) // TODO: updates OGRE objects --> belongs to GfxScene ~ only_a_ptr, 05/2018
 {
     //ASYNCSCENE OLD m_character_scenenode->setPosition(position);
     m_character_position = position;
     m_prev_position = position;
 }
 
-Vector3 Character::getPosition()
+Vector3 RoR::Character::getPosition()
 {
     //ASYNCSCENE OLDreturn m_character_scenenode->getPosition();
     return m_character_position;
 }
 
-void Character::setRotation(Radian rotation)
+void RoR::Character::setRotation(Radian rotation)
 {
     m_character_rotation = rotation;
 }
 
-void Character::SetAnimState(std::string mode, float time)
+void RoR::Character::SetAnimState(std::string mode, float time)
 {
     if (m_anim_name != mode)
     {
@@ -126,7 +126,7 @@ float calculate_collision_depth(Vector3 pos)
     return query.y - pos.y;
 }
 
-void Character::update(float dt)
+void RoR::Character::update(float dt)
 {
     if (!m_is_remote && (m_actor_coupling == nullptr) && (App::sim_state->getEnum<SimState>() != SimState::PAUSED))
     {
@@ -398,13 +398,13 @@ void Character::update(float dt)
 #endif // USE_SOCKETW
 }
 
-void Character::move(Vector3 offset)
+void RoR::Character::move(Vector3 offset)
 {
     m_character_position += offset;  //ASYNCSCENE OLD m_character_scenenode->translate(offset);
 }
 
 // Helper function
-void Character::ReportError(const char* detail)
+void RoR::Character::ReportError(const char* detail)
 {
 #ifdef USE_SOCKETW
     Ogre::UTFString username;
@@ -423,7 +423,7 @@ void Character::ReportError(const char* detail)
 #endif
 }
 
-void Character::SendStreamSetup()
+void RoR::Character::SendStreamSetup()
 {
 #ifdef USE_SOCKETW
     if (m_is_remote)
@@ -443,7 +443,7 @@ void Character::SendStreamSetup()
 #endif // USE_SOCKETW
 }
 
-void Character::SendStreamData()
+void RoR::Character::SendStreamData()
 {
 #ifdef USE_SOCKETW
     if (m_net_timer.getMilliseconds() - m_net_last_update_time < 100)
@@ -470,7 +470,7 @@ void Character::SendStreamData()
 #endif // USE_SOCKETW
 }
 
-void Character::receiveStreamData(unsigned int& type, int& source, unsigned int& streamid, char* buffer)
+void RoR::Character::receiveStreamData(unsigned int& type, int& source, unsigned int& streamid, char* buffer)
 {
 #ifdef USE_SOCKETW
     if (type == RoRnet::MSG2_STREAM_DATA && m_source_id == source && m_stream_id == streamid)
@@ -520,7 +520,7 @@ void Character::receiveStreamData(unsigned int& type, int& source, unsigned int&
 #endif
 }
 
-void Character::SetActorCoupling(bool enabled, Actor* actor)
+void RoR::Character::SetActorCoupling(bool enabled, Actor* actor)
 {
     m_actor_coupling = actor;
 #ifdef USE_SOCKETW
@@ -547,7 +547,7 @@ void Character::SetActorCoupling(bool enabled, Actor* actor)
 // --------------------------------
 // GfxCharacter
 
-GfxCharacter* Character::SetupGfx()
+GfxCharacter* RoR::Character::SetupGfx()
 {
     Entity* entity = App::GetGfxScene()->GetSceneManager()->createEntity(m_instance_name + "_mesh", "character.mesh");
     m_driving_anim_length = entity->getAnimationState("Driving")->getLength();

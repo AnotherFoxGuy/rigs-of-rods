@@ -122,6 +122,7 @@ Collisions::Collisions(Ogre::Vector3 terrn_size):
     , hashmask(0)
     , landuse(0)
     , m_terrain_size(terrn_size)
+    , collisionMeshIn(0)
 {
     for (int i=0; i < HASH_POWER; i++)
     {
@@ -597,10 +598,17 @@ int Collisions::addCollisionTri(Vector3 p1, Vector3 p2, Vector3 p3, ground_model
     }
 
     collisionMesh->position(p1);
+    collisionMesh->normal(0, 0, 1);
+    collisionMesh->index(collisionMeshIn++);
     collisionMesh->position(p2);
+    collisionMesh->normal(0, 0, 1);
+    collisionMesh->index(collisionMeshIn++);
     collisionMesh->position(p3);
+    collisionMesh->normal(0, 0, 1);
+    collisionMesh->index(collisionMeshIn++);
 
-    collisionMesh->triangle(new_tri_index, new_tri_index + 1 ,new_tri_index + 2);
+
+
 
     m_collision_aab.merge(new_tri.aab);
     m_collision_tris.push_back(new_tri);

@@ -25,7 +25,9 @@
 #include "TerrainEditor.h"
 #include "Terrn2FileFormat.h"
 
+#include <OgreDetourCrowd.h>
 #include <OgreVector3.h>
+#include <TestCharacter.h>
 #include <string>
 
 namespace RoR {
@@ -70,6 +72,9 @@ public:
     TerrainEditor*          GetTerrainEditor()            { return &m_terrain_editor; }
     Collisions*             GetCollisions()               { return m_collisions; }
     IWater*                 getWater()                    { return m_water.get(); }
+
+    OgreDetourCrowd *mDetourCrowd;
+    TestCharacter *mcharacter;
 
         // Visuals
 

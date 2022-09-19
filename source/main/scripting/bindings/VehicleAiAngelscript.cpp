@@ -29,23 +29,8 @@ void RoR::RegisterVehicleAi(asIScriptEngine *engine)
 {
     int result;
 
-    // enum aiEvents
-    result = engine->RegisterEnum("aiEvents"); ROR_ASSERT(result >= 0);
-    result = engine->RegisterEnumValue("aiEvents", "AI_LIGHTSTOGGLE", AI_LIGHTSTOGGLE); ROR_ASSERT(result >= 0);
-    result = engine->RegisterEnumValue("aiEvents", "AI_WAIT_SECONDS", AI_WAIT_SECONDS); ROR_ASSERT(result >= 0);
-    result = engine->RegisterEnumValue("aiEvents", "AI_BEACONSTOGGLE", AI_BEACONSTOGGLE); ROR_ASSERT(result >= 0);
-
-    // enum aiEvents
-    result = engine->RegisterEnum("AiValues"); ROR_ASSERT(result >= 0);
-    result = engine->RegisterEnumValue("AiValues", "AI_SPEED", AI_SPEED); ROR_ASSERT(result >= 0);
-    result = engine->RegisterEnumValue("AiValues", "AI_POWER", AI_POWER); ROR_ASSERT(result >= 0);
-
     result = engine->RegisterObjectType("VehicleAIClass", sizeof(VehicleAI), asOBJ_REF); ROR_ASSERT(result >= 0);
-    result = engine->RegisterObjectMethod("VehicleAIClass", "void addWaypoint(string &in, vector3 &in)", asMETHOD(VehicleAI, AddWaypoint), asCALL_THISCALL); ROR_ASSERT(result >= 0);
-    result = engine->RegisterObjectMethod("VehicleAIClass", "void addWaypoints(dictionary &in)", asMETHOD(VehicleAI, AddWaypoint), asCALL_THISCALL); ROR_ASSERT(result >= 0);
-    result = engine->RegisterObjectMethod("VehicleAIClass", "void setActive(bool)", asMETHOD(VehicleAI, SetActive), asCALL_THISCALL); ROR_ASSERT(result >= 0);
-    result = engine->RegisterObjectMethod("VehicleAIClass", "void addEvent(string &in,int &in)", asMETHOD(VehicleAI, AddEvent), asCALL_THISCALL); ROR_ASSERT(result >= 0);
-    result = engine->RegisterObjectMethod("VehicleAIClass", "void setValueAtWaypoint(string &in, int &in, float &in)", asMETHOD(VehicleAI, SetValueAtWaypoint), asCALL_THISCALL); ROR_ASSERT(result >= 0);
+    result = engine->RegisterObjectMethod("VehicleAIClass", "void updateDestination(vector3 &in, bool &in)", asMETHOD(VehicleAI, updateDestination), asCALL_THISCALL); ROR_ASSERT(result >= 0);
     result = engine->RegisterObjectBehaviour("VehicleAIClass", asBEHAVE_ADDREF, "void f()", asMETHOD(VehicleAI, addRef), asCALL_THISCALL); ROR_ASSERT(result >= 0);
     result = engine->RegisterObjectBehaviour("VehicleAIClass", asBEHAVE_RELEASE, "void f()", asMETHOD(VehicleAI, release), asCALL_THISCALL); ROR_ASSERT(result >= 0);
 

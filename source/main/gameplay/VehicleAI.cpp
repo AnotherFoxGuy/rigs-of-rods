@@ -27,17 +27,33 @@
 #include "Actor.h"
 #include "Console.h"
 #include "EngineSim.h"
+#include "Terrain.h"
+#include "GfxScene.h"
+#include "GUIManager.h."
 
 #include "scriptdictionary/scriptdictionary.h"
+
+#include "OgreDetourCrowd.h"
 
 using namespace Ogre;
 using namespace RoR;
 
+Vector3 aaaaa;
+
 VehicleAI::VehicleAI(Actor* b) :
-    is_waiting(false),
-    wait_time(0.0f)
+                                 mStopped(false)
 {
     beam = b;
+    mDetourCrowd = App::GetSimTerrain()->mDetourCrowd;
+    mAgentID = mDetourCrowd->addAgent(beam->getPosition());
+    mAgent = mDetourCrowd->m_crowd->getEditableAgent(mAgentID);
+    mAgent->params.radius = 3;
+
+    mNode = App::GetGfxScene()->GetSceneManager()->getRootSceneNode()->createChildSceneNode();
+    auto mEnt = App::GetGfxScene()->GetSceneManager()->createEntity("Cylinder.mesh");
+    mEnt->setMaterialName("Cylinder/Blue");
+    mNode->attachObject(mEnt);
+    mNode->setPosition(beam->getPosition());
 }
 
 VehicleAI::~VehicleAI()
@@ -46,200 +62,124 @@ VehicleAI::~VehicleAI()
 
 void VehicleAI::SetActive(bool value)
 {
-    is_enabled = value;
+    mStopped = value;
 }
 
 bool VehicleAI::IsActive()
 {
-    return is_enabled;
+    return mStopped;
 }
 
-void VehicleAI::AddWaypoint(Ogre::String& id, Ogre::Vector3& point)
+void VehicleAI::updateDestination(Ogre::Vector3 destination, bool updatePreviousPath)
 {
-    if (current_waypoint == Vector3::ZERO)
-        current_waypoint = point;
+    // Find position on navmesh
+    if(!mDetourCrowd->m_recast->findNearestPointOnNavmesh(destination, destination))
+      return;
 
-    free_waypoints++;
-    waypoints.emplace(free_waypoints, point);
-    waypoint_ids.emplace(id, free_waypoints);
-    waypoint_names.emplace(free_waypoints, id);
-}
+    mDetourCrowd->setMoveTarget(mAgentID, destination, updatePreviousPath);
+    mDestination = destination;
+    mStopped = false;
 
-void VehicleAI::AddWaypoints(AngelScript::CScriptDictionary& d)
-{
-    for (auto item : d)
-    {
-        Ogre::Vector3 point;
-        item.GetValue(&point, item.GetTypeId());
-        Ogre::String key(item.GetKey());
-        this->AddWaypoint(key, point);
-    }
-}
-
-void VehicleAI::AddEvent(Ogre::String& id, int& ev)
-{
-    int waypointid = waypoint_ids[id];
-    if (waypointid)
-        waypoint_events.emplace(waypointid, ev);
-}
-
-void VehicleAI::SetValueAtWaypoint(Ogre::String& id, int& value_id, float& value)
-{
-    int waypointid = waypoint_ids[id];
-    if (waypointid)
-    {
-        switch (value_id)
-        {
-        case AI_SPEED:
-            waypoint_speed.emplace(waypointid, value);
-            break;
-        case AI_POWER:
-            waypoint_power.emplace(waypointid, value);
-            break;
-        default:
-            break;
-        }
-    }
-}
-
-void VehicleAI::updateWaypoint()
-{
-    RoR::App::GetConsole()->putMessage(RoR::Console::CONSOLE_MSGTYPE_SCRIPT, RoR::Console::CONSOLE_SYSTEM_NOTICE, "Reached waypoint: " + waypoint_names[current_waypoint_id], "note.png");
-
-    int event = waypoint_events[current_waypoint_id];
-    if (event)
-    {
-        switch (event)
-        {
-        case AI_LIGHTSTOGGLE:
-            beam->lightsToggle();
-            break;
-        case AI_BEACONSTOGGLE:
-            beam->beaconsToggle();
-            break;
-        default:
-            break;
-        }
-    }
-
-    float speed = waypoint_speed[current_waypoint_id];
-    if (speed)
-        maxspeed = speed;
-
-    float power = waypoint_power[current_waypoint_id];
-    if (power)
-        acc_power = power;
-
-    current_waypoint_id++;
-    if (current_waypoint_id > free_waypoints)
-    {
-        current_waypoint_id = 0;
-        is_enabled = false;
-        beam->parkingbrakeToggle();
-    }
-    current_waypoint = waypoints[current_waypoint_id];
+    int ret = mDetourCrowd->m_recast->FindPath(beam->getPosition(), destination, 0, mAgentID) ;
+    if( ret >= 0 )
+      mDetourCrowd->m_recast->CreateRecastPathLine(0) ; // Draw a line showing path at specified slot
 }
 
 void VehicleAI::update(float dt, int doUpdate)
 {
-    if (is_waiting)
-    {
-        wait_time -= dt;
-        if (wait_time < 0)
-        {
-            is_waiting = false;
-        }
-        return;
+if (!mStopped) {
+  /* Vector3 mAgentPosition = beam->getPosition();
+
+Vector3 TargetPosition;
+OgreRecast::FloatAToOgreVect3(mAgent->npos, TargetPosition);
+mNode->setPosition(TargetPosition);
+float distance = TargetPosition.distance(mAgentPosition);
+
+TargetPosition.y = 0; //Vector3 > Vector2
+Quaternion TargetOrientation = Quaternion::ZERO;
+
+mAgentPosition.y = 0; //Vector3 > Vector2
+Quaternion mAgentOrientation = Quaternion(Radian(beam->getRotation()),
+Vector3::NEGATIVE_UNIT_Y); mAgentOrientation.normalise();
+
+Vector3 mVectorToTarget = TargetPosition - mAgentPosition; // A-B = B->A
+mAgentPosition.normalise();
+
+Vector3 mAgentHeading = mAgentOrientation * mAgentPosition;
+Vector3 mTargetHeading = TargetOrientation * TargetPosition;
+mAgentHeading.normalise();
+mTargetHeading.normalise();
+
+// Compute new torque scalar (-1.0 to 1.0) based on heading vector to target.
+Vector3 mSteeringForce = mAgentOrientation.Inverse() * mVectorToTarget;
+mSteeringForce.normalise();
+
+
+
+float mYaw = mSteeringForce.x;
+float mPitch = mSteeringForce.z;
+//float mRoll   = mTargetVO.getRotationTo( mAgentVO ).getRoll().valueRadians();
+
+if (mPitch > 0)
+{
+if (mYaw > 0)
+ mYaw = 1;
+else
+ mYaw = -1;
+}
+
+// actually steer
+beam->ar_hydro_dir_command = mYaw;//mYaw
+
+if (beam->ar_engine)
+{
+// start engine if not running
+if (!beam->ar_engine->IsRunning())
+ beam->ar_engine->StartEngine();
+
+//if (distance > 5)
+{
+ beam->ar_brake = 0;
+ beam->ar_engine->autoSetAcc(0.3f);
+}
+else
+{
+ beam->ar_brake = 1;
+ beam->ar_engine->autoSetAcc(0);
+}
+}*/
+
+      Vector3 TargetPosition;
+      OgreRecast::FloatAToOgreVect3(mAgent->npos, TargetPosition);
+      mNode->setPosition(TargetPosition);
+
+      Vector3 velocity;
+      OgreRecast::FloatAToOgreVect3(mAgent->nvel, velocity);
+
+      Quaternion mAgentOrientation =
+          Quaternion(Radian(beam->getRotation()), Vector3::NEGATIVE_UNIT_Y);
+      mAgentOrientation.normalise();
+
+      // Compute new torque scalar (-1.0 to 1.0) based on heading vector to target.
+      Vector3 mSteeringForce = mAgentOrientation.Inverse() * velocity;
+      mSteeringForce.normalise();
+
+
+
+      beam->ar_hydro_dir_command = mSteeringForce.x;
+      OgreRecast::OgreVect3ToFloatA(beam->getPosition(), mAgent->npos);
     }
 
-    Vector3 mAgentPosition = beam->getPosition();
-
-    if (current_waypoint.distance(mAgentPosition) < 5)
-    {
-        updateWaypoint();
-        return;
-    }
-
-    Vector3 TargetPosition = current_waypoint;
-    TargetPosition.y = 0; //Vector3 > Vector2
-    Quaternion TargetOrientation = Quaternion::ZERO;
-
-    mAgentPosition.y = 0; //Vector3 > Vector2
-    Quaternion mAgentOrientation = Quaternion(Radian(beam->getRotation()), Vector3::NEGATIVE_UNIT_Y);
-    mAgentOrientation.normalise();
-
-    Vector3 mVectorToTarget = TargetPosition - mAgentPosition; // A-B = B->A
-    mAgentPosition.normalise();
-
-    Vector3 mAgentHeading = mAgentOrientation * mAgentPosition;
-    Vector3 mTargetHeading = TargetOrientation * TargetPosition;
-    mAgentHeading.normalise();
-    mTargetHeading.normalise();
-
-    // Compute new torque scalar (-1.0 to 1.0) based on heading vector to target.
-    Vector3 mSteeringForce = mAgentOrientation.Inverse() * mVectorToTarget;
-    mSteeringForce.normalise();
-
-    float mYaw = mSteeringForce.x;
-    float mPitch = mSteeringForce.z;
-    //float mRoll   = mTargetVO.getRotationTo( mAgentVO ).getRoll().valueRadians();
-
-    if (mPitch > 0)
-    {
-        if (mYaw > 0)
-            mYaw = 1;
-        else
-            mYaw = -1;
-    }
-
-    // actually steer
-    beam->ar_hydro_dir_command = mYaw;//mYaw
-
-    if (beam->ar_engine)
-    {
-        // start engine if not running
-        if (!beam->ar_engine->IsRunning())
-            beam->ar_engine->StartEngine();
-
-        float kmh_wheel_speed = beam->getWheelSpeed() * 3.6;
-
-        if (abs(mYaw) < 0.5f)
-        {
-            if (kmh_wheel_speed < maxspeed - 1)
-            {
-                beam->ar_brake = 0;
-                beam->ar_engine->autoSetAcc(acc_power);
-            }
-            else if (kmh_wheel_speed > maxspeed + 1)
-            {
-                beam->ar_brake = 1.0f / 3.0f;
-                beam->ar_engine->autoSetAcc(0);
-            }
-            else
-            {
-                beam->ar_brake = 0;
-                beam->ar_engine->autoSetAcc(0);
-            }
-        }
-        else
-        {
-            if (kmh_wheel_speed < maxspeed - 1)
-            {
-                beam->ar_brake = 0;
-                beam->ar_engine->autoSetAcc(acc_power / 3);
-            }
-            else if (kmh_wheel_speed > maxspeed + 1)
-            {
-                beam->ar_brake = 1.0f / 2.0f;
-                beam->ar_engine->autoSetAcc(0);
-            }
-            else
-            {
-                beam->ar_brake = 0;
-                beam->ar_engine->autoSetAcc(0);
-            }
-        }
-    }
+    auto st = beam->ar_design_name + " AI";
+    ImGui::Begin(st.c_str(), nullptr);
+    ImGui::InputFloat("x", &aaaaa.x);
+    ImGui::InputFloat("y", &aaaaa.y);
+    ImGui::InputFloat("z", &aaaaa.z);
+    if (ImGui::Button("Setdest"))
+      updateDestination(aaaaa, true);
+    if (ImGui::Button(mStopped ? "Stop" : "Start"))
+      mStopped = !mStopped;
+    ImGui::End();
 }
 
 #endif // USE_ANGELSCRIPT

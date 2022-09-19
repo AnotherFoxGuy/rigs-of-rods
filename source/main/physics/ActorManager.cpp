@@ -979,7 +979,7 @@ void ActorManager::UpdateActors(Actor* player_actor)
         actor->HandleAngelScriptEvents(dt);
 
 #ifdef USE_ANGELSCRIPT
-        if (actor->ar_vehicle_ai && actor->ar_vehicle_ai->IsActive())
+       // if (actor->ar_vehicle_ai && actor->ar_vehicle_ai->IsActive())
             actor->ar_vehicle_ai->update(dt, 0);
 #endif // USE_ANGELSCRIPT
 
