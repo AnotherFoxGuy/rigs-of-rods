@@ -116,6 +116,7 @@ using namespace Ogre;
 using namespace RoR;
 
 Collisions::Collisions(Ogre::Vector3 terrn_size):
+    , collisionMesh(nullptr)
       forcecam(false)
     , free_eventsource(0)
     , hashmask(0)
@@ -131,11 +132,15 @@ Collisions::Collisions(Ogre::Vector3 terrn_size):
     loadDefaultModels();
     defaultgm = getGroundModelByString("concrete");
     defaultgroundgm = getGroundModelByString("gravel");
+
+    collisionMesh = App::GetGfxScene()->GetSceneManager()->createManualObject();
+    collisionMesh->begin("tracks/debug/collision/triangle", RenderOperation::OT_TRIANGLE_LIST);
 }
 
 Collisions::~Collisions()
 {
     if (landuse) delete landuse;
+    m_navmesh_entities.clear();
 }
 
 int Collisions::loadDefaultModels()
@@ -590,6 +595,12 @@ int Collisions::addCollisionTri(Vector3 p1, Vector3 p2, Vector3 p3, ground_model
             hash_add(i, j, new_tri_index + hash_coll_element_t::ELEMENT_TRI_BASE_INDEX, new_tri.aab.getMaximum().y);
         }
     }
+
+    collisionMesh->position(p1);
+    collisionMesh->position(p2);
+    collisionMesh->position(p3);
+
+    collisionMesh->triangle(new_tri_index, new_tri_index + 1 ,new_tri_index + 2);
 
     m_collision_aab.merge(new_tri.aab);
     m_collision_tris.push_back(new_tri);

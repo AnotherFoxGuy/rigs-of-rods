@@ -156,6 +156,8 @@ private:
     int collision_version;
     unsigned int hashmask;
 
+    std::vector<Ogre::Entity*> m_navmesh_entities;
+
     const Ogre::Vector3 m_terrain_size;
 
     void hash_add(int cell_x, int cell_z, int value, float h);
@@ -200,6 +202,8 @@ public:
     void removeCollisionBox(int number);
     void removeCollisionTri(int number);
     void clearEventCache() { m_last_called_cboxes.clear(); }
+
+    std::vector<Ogre::Entity*>& GetNavmeshEntities() { return m_navmesh_entities; }
 
     Ogre::AxisAlignedBox getCollisionAAB() { return m_collision_aab; };
 

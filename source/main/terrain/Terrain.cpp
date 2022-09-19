@@ -572,7 +572,7 @@ void RoR::Terrain::GenerateNavmesh()
   auto mRecast = new OgreRecast(App::GetGfxScene()->GetSceneManager()); // Use default configuration
   // Simple recast navmesh build example
 
-  if (mRecast->NavMeshBuild(m_object_manager->GetNavmeshEntities())) {
+  if (mRecast->NavMeshBuild(m_collisions->GetNavmeshEntities())) {
     mRecast->drawNavMesh();
   } else {
     Ogre::LogManager::getSingletonPtr()->logMessage(

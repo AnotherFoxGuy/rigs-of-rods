@@ -1,6 +1,8 @@
 roadquay.mesh
 1, 1, 1
 
+navigable
+
 beginbox
 boxcoords 0, 10, -10, 0, -8, 8
 endbox

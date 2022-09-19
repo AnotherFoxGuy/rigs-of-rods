@@ -1,6 +1,8 @@
 road-street.mesh
 1, 1, 1
 
+navigable
+
 beginbox
 boxcoords -5, 5, -3, 0.1, -5, 5
 endbox

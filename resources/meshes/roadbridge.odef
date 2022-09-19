@@ -1,6 +1,8 @@
 roadbridge.mesh
 1, 1, 1
 
+navigable
+
 beginbox
 boxcoords 0, 10, -1, 0, -4.5, 4.5
 endbox

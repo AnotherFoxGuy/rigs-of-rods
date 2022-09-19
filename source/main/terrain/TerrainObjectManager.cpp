@@ -686,7 +686,7 @@ void TerrainObjectManager::LoadTerrainObject(const Ogre::String& name, const Ogr
             cmesh.mesh_name, pos, tenode->getOrientation(),
             cmesh.scale, gm, &(obj->collTris));
 
-        if(odef->is_navigable)
+        /*if(odef->is_navigable)
         {
             Ogre::SceneNode *node = m_navmesh_node->createChildSceneNode();
             Ogre::Entity *ent = App::GetGfxScene()->GetSceneManager()->createEntity(cmesh.mesh_name);
@@ -696,7 +696,7 @@ void TerrainObjectManager::LoadTerrainObject(const Ogre::String& name, const Ogr
             node->setScale(cmesh.scale);
             ent->setVisible(false);
             m_map_navmesh_entities.push_back(ent);
-        }
+        }*/
     }
 
     for (ODefParticleSys& psys : odef->particle_systems)

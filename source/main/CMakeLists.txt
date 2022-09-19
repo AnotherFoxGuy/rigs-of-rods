@@ -201,7 +201,7 @@ set(SOURCE_FILES
         terrain/TerrainEditor.{h,cpp}
         terrain/TerrainGeometryManager.{h,cpp}
         terrain/Terrain.{h,cpp}
-        terrain/TerrainObjectManager.{h,cpp}        
+        terrain/TerrainObjectManager.{h,cpp}
         threadpool/ThreadPool.h
         utils/ConfigFile.{h,cpp}
         utils/ErrorUtils.{h,cpp}
