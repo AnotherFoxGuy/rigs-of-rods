@@ -572,8 +572,11 @@ void RoR::Terrain::GenerateNavmesh()
 {
     // RECAST (navmesh creation)
     // Create the navmesh and show it
-    auto mRecast = new OgreRecast(App::GetGfxScene()->GetSceneManager()); // Use default configuration
+    mRecast = new OgreRecast(App::GetGfxScene()->GetSceneManager()); // Use default configuration
     // Simple recast navmesh build example
+    auto rayparm = OgreRecastConfigParams();
+    rayparm.setAgentRadius(3);
+    mRecast->configure(rayparm);
 
     if (mRecast->NavMeshBuild(m_collisions->GetNavmeshEntities())) {
       mRecast->drawNavMesh();

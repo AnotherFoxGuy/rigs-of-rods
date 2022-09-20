@@ -116,8 +116,8 @@ using namespace Ogre;
 using namespace RoR;
 
 Collisions::Collisions(Ogre::Vector3 terrn_size):
-    , collisionMesh(nullptr)
-      forcecam(false)
+      collisionMesh(nullptr)
+    , forcecam(false)
     , free_eventsource(0)
     , hashmask(0)
     , landuse(0)
@@ -1425,10 +1425,17 @@ void Collisions::addCollisionMesh(Ogre::String const& srcname, Ogre::String cons
     rec.bounding_box = ent->getMesh()->getBounds();
     m_collision_meshes.push_back(rec);
 
+    SceneNode *n = App::GetGfxScene()->GetSceneManager()->getRootSceneNode()->createChildSceneNode();
+    n->attachObject(ent);
+    n->setPosition(pos);
+    n->setScale(scale);
+    n->setOrientation(q);
+    n->setVisible(false);
+    m_navmesh_entities.push_back(ent);
+
     // Clean up
     delete[] vertices;
     delete[] indices;
-    App::GetGfxScene()->GetSceneManager()->destroyEntity(ent);
 }
 
 void Collisions::registerCollisionMesh(Ogre::String const& srcname, Ogre::String const& meshname, Ogre::Vector3 const& pos, AxisAlignedBox bounding_box, ground_model_t* gm, int ctri_start, int ctri_count)
@@ -1563,4 +1570,18 @@ void Collisions::getMeshInformation(Mesh* mesh,size_t &vertex_count,Ogre::Vector
 
 void Collisions::finishLoadingTerrain()
 {
+    try
+    {
+        SceneNode *sn = App::GetGfxScene()->GetSceneManager()->getRootSceneNode()->createChildSceneNode();
+        collisionMesh->end();
+        auto mesh = collisionMesh->convertToMesh("colmesh");
+        Entity *ent = App::GetGfxScene()->GetSceneManager()->createEntity(mesh);
+        ent->setVisible(false);
+        sn->attachObject(ent);
+        m_navmesh_entities.push_back(ent);
+    }
+    catch (...)
+    {
+        LOG("Failed to generate colmesh");
+    }
 }

@@ -158,6 +158,9 @@ private:
 
     std::vector<Ogre::Entity*> m_navmesh_entities;
 
+    Ogre::ManualObject* collisionMesh;
+    int collisionMeshIn;
+
     const Ogre::Vector3 m_terrain_size;
 
     void hash_add(int cell_x, int cell_z, int value, float h);

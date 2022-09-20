@@ -74,6 +74,7 @@ public:
     IWater*                 getWater()                    { return m_water.get(); }
 
     OgreDetourCrowd *mDetourCrowd;
+    OgreRecast *mRecast;
     TestCharacter *mcharacter;
 
         // Visuals

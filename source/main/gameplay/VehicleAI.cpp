@@ -38,16 +38,14 @@
 using namespace Ogre;
 using namespace RoR;
 
-Vector3 aaaaa;
-
-VehicleAI::VehicleAI(Actor* b) :
-                                 mStopped(false)
+VehicleAI::VehicleAI(Actor* b) : is_enabled(false)
 {
     beam = b;
     mDetourCrowd = App::GetSimTerrain()->mDetourCrowd;
     mAgentID = mDetourCrowd->addAgent(beam->getPosition());
     mAgent = mDetourCrowd->m_crowd->getEditableAgent(mAgentID);
     mAgent->params.radius = 3;
+    mAgent->params.maxSpeed = 50;
 
     mNode = App::GetGfxScene()->GetSceneManager()->getRootSceneNode()->createChildSceneNode();
     auto mEnt = App::GetGfxScene()->GetSceneManager()->createEntity("Cylinder.mesh");
@@ -62,12 +60,12 @@ VehicleAI::~VehicleAI()
 
 void VehicleAI::SetActive(bool value)
 {
-    mStopped = value;
+    is_enabled = value;
 }
 
 bool VehicleAI::IsActive()
 {
-    return mStopped;
+    return is_enabled;
 }
 
 void VehicleAI::updateDestination(Ogre::Vector3 destination, bool updatePreviousPath)
@@ -76,18 +74,33 @@ void VehicleAI::updateDestination(Ogre::Vector3 destination, bool updatePrevious
     if(!mDetourCrowd->m_recast->findNearestPointOnNavmesh(destination, destination))
       return;
 
-    mDetourCrowd->setMoveTarget(mAgentID, destination, updatePreviousPath);
+    mDetourCrowd->setMoveTarget(destination, updatePreviousPath);
+    //mDetourCrowd->setMoveTarget(mAgentID, destination, updatePreviousPath);
     mDestination = destination;
-    mStopped = false;
+    is_enabled = true;
 
     int ret = mDetourCrowd->m_recast->FindPath(beam->getPosition(), destination, 0, mAgentID) ;
     if( ret >= 0 )
       mDetourCrowd->m_recast->CreateRecastPathLine(0) ; // Draw a line showing path at specified slot
 }
 
+void VehicleAI::setPosition(Ogre::Vector3 position)
+{
+    // Find position on navmesh
+    if (!mDetourCrowd->m_recast->findNearestPointOnNavmesh(position, position))
+      return;
+
+    // Remove agent from crowd and re-add at position
+    mDetourCrowd->removeAgent(mAgentID);
+    mAgentID = mDetourCrowd->addAgent(position);
+    mAgent = mDetourCrowd->m_crowd->getEditableAgent(mAgentID);
+
+    mNode->setPosition(position);
+}
+
 void VehicleAI::update(float dt, int doUpdate)
 {
-if (!mStopped) {
+if (is_enabled) {
   /* Vector3 mAgentPosition = beam->getPosition();
 
 Vector3 TargetPosition;
@@ -175,10 +188,24 @@ else
     ImGui::InputFloat("x", &aaaaa.x);
     ImGui::InputFloat("y", &aaaaa.y);
     ImGui::InputFloat("z", &aaaaa.z);
-    if (ImGui::Button("Setdest"))
-      updateDestination(aaaaa, true);
-    if (ImGui::Button(mStopped ? "Stop" : "Start"))
-      mStopped = !mStopped;
+    if (ImGui::Button("updateDestination"))
+    {
+        this->updateDestination(aaaaa, false);
+        aaaaa = mDestination;
+    }
+
+    if (ImGui::Button("setPosition"))
+    {
+        this->setPosition(beam->getPosition());
+    }
+
+    if (ImGui::Button("Random"))
+    {
+        aaaaa = App::GetSimTerrain()->mRecast->getRandomNavMeshPoint();
+        this->updateDestination(aaaaa, false);
+    }
+    if (ImGui::Button(is_enabled ? "Stop" : "Start"))
+      is_enabled = !is_enabled;
     ImGui::End();
 }
 

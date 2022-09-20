@@ -104,7 +104,7 @@ private:
   /**
       * True if this character is stopped.
       **/
-  bool mStopped;
+  bool is_enabled;
 
 
   Actor* beam;//!< The verhicle the AI is driving.
@@ -114,6 +114,9 @@ private:
       **/
   Ogre::SceneNode *mNode;
 
+  Ogre::Vector3 aaaaa;
+
+  void setPosition(Ogre::Vector3 position);
 };
 
 } // namespace RoR
