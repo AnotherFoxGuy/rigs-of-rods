@@ -39,7 +39,7 @@ add_external_lib(
 
 add_external_lib(
         MyGUI
-        mygui/3.4.0@anotherfoxguy/stable
+        mygui/3.4.1@anotherfoxguy/stable
         REQUIRED
         # PKG_CONFIG "MYGUI = 3.4.0"
         FIND_PACKAGE
@@ -68,14 +68,13 @@ add_external_lib(
 
 add_external_lib(
         Caelum
-        # Temporary switch back to the rigs of rods version, since the OGRE version is broken
-        ogre3d-caelum/0.6.4.1@anotherfoxguy/stable
+        ogre3d-caelum/2022.08@anotherfoxguy/stable
         # PKG_CONFIG "Caelum >= 0.6.3"
         FIND_PACKAGE
 )
 add_external_lib(
         PagedGeometry
-        ogre3d-pagedgeometry/1.3.0.1@anotherfoxguy/stable
+        ogre3d-pagedgeometry/2022.08@anotherfoxguy/stable
         # PKG_CONFIG "PagedGeometry >= 1.2"
         FIND_PACKAGE
         SYMBOL PAGED
