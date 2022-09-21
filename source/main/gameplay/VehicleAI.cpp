@@ -43,9 +43,11 @@ VehicleAI::VehicleAI(Actor* b) : is_enabled(false)
     beam = b;
     mDetourCrowd = App::GetSimTerrain()->mDetourCrowd;
     mAgentID = mDetourCrowd->addAgent(beam->getPosition());
+    if(mAgentID < 0)
+      return;
     mAgent = mDetourCrowd->m_crowd->getEditableAgent(mAgentID);
     mAgent->params.radius = 3;
-    mAgent->params.maxSpeed = 50;
+    mAgent->params.maxSpeed = 5;
 
     mNode = App::GetGfxScene()->GetSceneManager()->getRootSceneNode()->createChildSceneNode();
     auto mEnt = App::GetGfxScene()->GetSceneManager()->createEntity("Cylinder.mesh");
@@ -56,6 +58,8 @@ VehicleAI::VehicleAI(Actor* b) : is_enabled(false)
 
 VehicleAI::~VehicleAI()
 {
+    mDetourCrowd->removeAgent(mAgentID);
+    mNode->removeAndDestroyAllChildren();
 }
 
 void VehicleAI::SetActive(bool value)
@@ -100,98 +104,73 @@ void VehicleAI::setPosition(Ogre::Vector3 position)
 
 void VehicleAI::update(float dt, int doUpdate)
 {
-if (is_enabled) {
-  /* Vector3 mAgentPosition = beam->getPosition();
+    Vector3 velocity;
+    Vector3 TargetPosition;
+    Vector3 mSteeringForce;
 
-Vector3 TargetPosition;
-OgreRecast::FloatAToOgreVect3(mAgent->npos, TargetPosition);
-mNode->setPosition(TargetPosition);
-float distance = TargetPosition.distance(mAgentPosition);
+    float speed = 0;
+    if (is_enabled) {
+        OgreRecast::FloatAToOgreVect3(mAgent->npos, TargetPosition);
+        mNode->setPosition(TargetPosition);
 
-TargetPosition.y = 0; //Vector3 > Vector2
-Quaternion TargetOrientation = Quaternion::ZERO;
+        OgreRecast::FloatAToOgreVect3(mAgent->nvel, velocity);
 
-mAgentPosition.y = 0; //Vector3 > Vector2
-Quaternion mAgentOrientation = Quaternion(Radian(beam->getRotation()),
-Vector3::NEGATIVE_UNIT_Y); mAgentOrientation.normalise();
+        Quaternion mAgentOrientation =
+            Quaternion(Radian(beam->getRotation()), Vector3::UNIT_Y);
+        mAgentOrientation.normalise();
 
-Vector3 mVectorToTarget = TargetPosition - mAgentPosition; // A-B = B->A
-mAgentPosition.normalise();
+        // Compute new torque scalar (-1.0 to 1.0) based on heading vector to target.
+        mSteeringForce = mAgentOrientation * velocity;
+        mSteeringForce.normalise();
 
-Vector3 mAgentHeading = mAgentOrientation * mAgentPosition;
-Vector3 mTargetHeading = TargetOrientation * TargetPosition;
-mAgentHeading.normalise();
-mTargetHeading.normalise();
+        Vector3 _currVel;
+        OgreRecast::FloatAToOgreVect3(mAgent->vel, _currVel);
 
-// Compute new torque scalar (-1.0 to 1.0) based on heading vector to target.
-Vector3 mSteeringForce = mAgentOrientation.Inverse() * mVectorToTarget;
-mSteeringForce.normalise();
+        Vector3 speed_offset = velocity - _currVel;
+        speed_offset = mAgentOrientation * speed_offset;
+        speed = speed_offset.z;
 
+        beam->ar_hydro_dir_command = mSteeringForce.x;
 
+        if (speed < 0.5)
+        {
+          beam->ar_brake = 0;
+          beam->ar_engine->autoSetAcc((-speed) / 10);
+        }
+        else if (speed > 0.5)
+        {
+          beam->ar_brake = 1.0f / 3.0f;
+          beam->ar_engine->autoSetAcc(0);
+        }
+        else
+        {
+          beam->ar_brake = 0;
+          beam->ar_engine->autoSetAcc(0);
+        }
 
-float mYaw = mSteeringForce.x;
-float mPitch = mSteeringForce.z;
-//float mRoll   = mTargetVO.getRotationTo( mAgentVO ).getRoll().valueRadians();
-
-if (mPitch > 0)
-{
-if (mYaw > 0)
- mYaw = 1;
-else
- mYaw = -1;
-}
-
-// actually steer
-beam->ar_hydro_dir_command = mYaw;//mYaw
-
-if (beam->ar_engine)
-{
-// start engine if not running
-if (!beam->ar_engine->IsRunning())
- beam->ar_engine->StartEngine();
-
-//if (distance > 5)
-{
- beam->ar_brake = 0;
- beam->ar_engine->autoSetAcc(0.3f);
-}
-else
-{
- beam->ar_brake = 1;
- beam->ar_engine->autoSetAcc(0);
-}
-}*/
-
-      Vector3 TargetPosition;
-      OgreRecast::FloatAToOgreVect3(mAgent->npos, TargetPosition);
-      mNode->setPosition(TargetPosition);
-
-      Vector3 velocity;
-      OgreRecast::FloatAToOgreVect3(mAgent->nvel, velocity);
-
-      Quaternion mAgentOrientation =
-          Quaternion(Radian(beam->getRotation()), Vector3::NEGATIVE_UNIT_Y);
-      mAgentOrientation.normalise();
-
-      // Compute new torque scalar (-1.0 to 1.0) based on heading vector to target.
-      Vector3 mSteeringForce = mAgentOrientation.Inverse() * velocity;
-      mSteeringForce.normalise();
-
-
-
-      beam->ar_hydro_dir_command = mSteeringForce.x;
-      OgreRecast::OgreVect3ToFloatA(beam->getPosition(), mAgent->npos);
+        OgreRecast::OgreVect3ToFloatA(beam->getPosition(), mAgent->npos);
+        OgreRecast::OgreVect3ToFloatA(beam->getVelocity(), mAgent->vel);
     }
 
     auto st = beam->ar_design_name + " AI";
     ImGui::Begin(st.c_str(), nullptr);
+    ImGui::Text("Speed %f", (-speed) / 10);
+    ImGui::Text("velocity %f %f %f", velocity.x, velocity.y, velocity.z);
+    ImGui::Text("TargetPosition %f %f %f", TargetPosition.x, TargetPosition.y, TargetPosition.z);
+    ImGui::Text("mSteeringForce %f %f %f", mSteeringForce.x, mSteeringForce.y, mSteeringForce.z);
     ImGui::InputFloat("x", &aaaaa.x);
     ImGui::InputFloat("y", &aaaaa.y);
     ImGui::InputFloat("z", &aaaaa.z);
+    ImGui::InputFloat("maxSpeed", &mAgent->params.maxSpeed);
     if (ImGui::Button("updateDestination"))
     {
         this->updateDestination(aaaaa, false);
         aaaaa = mDestination;
+    }
+
+    if (ImGui::Button("setCurrDest"))
+    {
+        aaaaa = beam->getPosition();
     }
 
     if (ImGui::Button("setPosition"))
