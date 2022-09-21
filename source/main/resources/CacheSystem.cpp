@@ -1013,6 +1013,7 @@ void CacheSystem::ParseSingleZip(String path)
             LOG("Error while opening archive: '" + path + "': " + e.getFullDescription());
         }
         ResourceGroupManager::getSingleton().destroyResourceGroup(RGN_TEMP);
+        ArchiveManager::getSingleton().unload(path);
         m_resource_paths.insert(path);
     }
 }
