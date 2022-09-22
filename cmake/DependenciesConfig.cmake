@@ -9,6 +9,7 @@ add_external_lib(
         OGRE
         ogre3d/13.4.4@anotherfoxguy/stable
         CONAN_PKG_NAME OGRE
+        CONAN_OPTIONS ogre3d:resourcemanager_strict=off
         REQUIRED
         # PKG_CONFIG "OGRE = 1.11.6"
         FIND_PACKAGE_OPTIONS 13 COMPONENTS Bites Overlay Paging RTShaderSystem MeshLodGenerator Terrain
