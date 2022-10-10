@@ -201,7 +201,7 @@ set(SOURCE_FILES
         terrain/TerrainEditor.{h,cpp}
         terrain/TerrainGeometryManager.{h,cpp}
         terrain/Terrain.{h,cpp}
-        terrain/TerrainObjectManager.{h,cpp}        
+        terrain/TerrainObjectManager.{h,cpp}
         threadpool/ThreadPool.h
         utils/ConfigFile.{h,cpp}
         utils/ErrorUtils.{h,cpp}
@@ -430,6 +430,12 @@ endif ()
 if (USE_PAGED)
     target_link_libraries(${BINNAME} PRIVATE PagedGeometry::PagedGeometry)
     target_compile_definitions(${BINNAME} PRIVATE USE_PAGED)
+endif ()
+
+
+if (USE_REMOTERY)
+    target_compile_definitions(${BINNAME} PRIVATE USE_REMOTERY)
+    target_link_libraries(${BINNAME} PRIVATE remotery)
 endif ()
 
 
