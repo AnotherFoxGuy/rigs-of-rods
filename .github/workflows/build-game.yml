@@ -43,6 +43,7 @@ jobs:
       - name: Configure
         run: |
           conan config set general.revisions_enabled=1
+          echo "tools.system.package_manager:mode = install\ntools.system.package_manager:sudo = True" > ~/.conan/global.conf
           cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=redist -DCREATE_CONTENT_FOLDER=ON .
         shell: bash
 
