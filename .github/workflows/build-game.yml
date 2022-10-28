@@ -41,7 +41,9 @@ jobs:
         shell: bash
 
       - name: Configure
-        run: cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=redist -DCREATE_CONTENT_FOLDER=ON .
+        run: |
+          conan config set general.revisions_enabled=1
+          cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=redist -DCREATE_CONTENT_FOLDER=ON .
         shell: bash
 
       - name: Build
@@ -101,7 +103,9 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1.12.0
 
       - name: Configure
-        run: cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=redist -DCREATE_CONTENT_FOLDER=ON .
+        run: |
+          conan config set general.revisions_enabled=1
+          cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=redist -DCREATE_CONTENT_FOLDER=ON .
         shell: cmd
 
       - name: Build
