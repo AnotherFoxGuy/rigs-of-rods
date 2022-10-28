@@ -31,7 +31,7 @@ add_external_lib(
 
 add_external_lib(
         OIS
-        ois/1.4@rigsofrods/custom
+        ois/1.5.1@anotherfoxguy/stable
         REQUIRED
         PKG_CONFIG "ois >= 1.4"
         FIND_PACKAGE
