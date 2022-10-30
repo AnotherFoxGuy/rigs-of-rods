@@ -10,13 +10,19 @@ endif ()
 
 set(ROR_FEAT_TIMING OFF)
 
+if (USE_PACKAGE_MANAGER)
+    conan_add_remote(NAME ror-conan
+            URL https://git.anotherfoxguy.com/api/packages/rorbot/conan
+            VERIFY_SSL True
+            )
+endif ()
+
 # Some pkg-config files are broken, that is why they are commented out
 
 add_external_lib(
         OGRE
-        ogre3d/13.4.4@anotherfoxguy/stable
-        CONAN_PKG_NAME OGRE
-        CONAN_OPTIONS ogre3d:resourcemanager_strict=off
+        ogre3d/13.5.0@anotherfoxguy/stable
+        CONAN_OPTIONS ogre3d:resourcemanager_strict=off # ogre3d:rendersystem_vulkan=True
         REQUIRED
         # PKG_CONFIG "OGRE = 1.11.6"
         FIND_PACKAGE_OPTIONS 13 COMPONENTS Bites Overlay Paging RTShaderSystem MeshLodGenerator Terrain
@@ -30,9 +36,29 @@ add_external_lib(
         FIND_PACKAGE_OPTIONS CONFIG
 )
 
+                                                                              
+#  TTTTTTTTTTTTTTTTTTTTTTT     OOOOOOOOO     DDDDDDDDDDDDD             OOOOOOOOO     
+#  T:::::::::::::::::::::T   OO:::::::::OO   D::::::::::::DDD        OO:::::::::OO   
+#  T:::::::::::::::::::::T OO:::::::::::::OO D:::::::::::::::DD    OO:::::::::::::OO 
+#  T:::::TT:::::::TT:::::TO:::::::OOO:::::::ODDD:::::DDDDD:::::D  O:::::::OOO:::::::O
+#  TTTTTT  T:::::T  TTTTTTO::::::O   O::::::O  D:::::D    D:::::D O::::::O   O::::::O
+#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
+#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
+#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
+#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
+#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
+#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
+#          T:::::T        O::::::O   O::::::O  D:::::D    D:::::D O::::::O   O::::::O
+#        TT:::::::TT      O:::::::OOO:::::::ODDD:::::DDDDD:::::D  O:::::::OOO:::::::O
+#        T:::::::::T       OO:::::::::::::OO D:::::::::::::::DD    OO:::::::::::::OO 
+#        T:::::::::T         OO:::::::::OO   D::::::::::::DDD        OO:::::::::OO   
+#        TTTTTTTTTTT           OOOOOOOOO     DDDDDDDDDDDDD             OOOOOOOOO     
+#                                                                                    
+# TODO: Needs to reverted back to "ois/1.4@rigsofrods/custom", but this package as to be updated first
+
 add_external_lib(
         OIS
-        ois/1.4.1@rigsofrods/custom
+        ois/1.5.1@anotherfoxguy/stable
         REQUIRED
         PKG_CONFIG "ois >= 1.4"
         FIND_PACKAGE
