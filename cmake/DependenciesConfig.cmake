@@ -14,7 +14,7 @@ endif ()
 
 add_external_lib(
         OGRE
-        ogre3d/22.10@anotherfoxguy/testing
+        ogre3d/13.5.0@anotherfoxguy/stable
         CONAN_OPTIONS ogre3d:resourcemanager_strict=off # ogre3d:rendersystem_vulkan=True
         REQUIRED
         # PKG_CONFIG "OGRE = 1.11.6"
@@ -28,6 +28,26 @@ add_external_lib(
         PKG_CONFIG "openal >= 1.18"
         FIND_PACKAGE_OPTIONS CONFIG
 )
+
+                                                                              
+#  TTTTTTTTTTTTTTTTTTTTTTT     OOOOOOOOO     DDDDDDDDDDDDD             OOOOOOOOO     
+#  T:::::::::::::::::::::T   OO:::::::::OO   D::::::::::::DDD        OO:::::::::OO   
+#  T:::::::::::::::::::::T OO:::::::::::::OO D:::::::::::::::DD    OO:::::::::::::OO 
+#  T:::::TT:::::::TT:::::TO:::::::OOO:::::::ODDD:::::DDDDD:::::D  O:::::::OOO:::::::O
+#  TTTTTT  T:::::T  TTTTTTO::::::O   O::::::O  D:::::D    D:::::D O::::::O   O::::::O
+#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
+#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
+#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
+#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
+#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
+#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
+#          T:::::T        O::::::O   O::::::O  D:::::D    D:::::D O::::::O   O::::::O
+#        TT:::::::TT      O:::::::OOO:::::::ODDD:::::DDDDD:::::D  O:::::::OOO:::::::O
+#        T:::::::::T       OO:::::::::::::OO D:::::::::::::::DD    OO:::::::::::::OO 
+#        T:::::::::T         OO:::::::::OO   D::::::::::::DDD        OO:::::::::OO   
+#        TTTTTTTTTTT           OOOOOOOOO     DDDDDDDDDDDDD             OOOOOOOOO     
+#                                                                                    
+# TODO: Needs to reverted back to "ois/1.4@rigsofrods/custom", but this package as to be updated first
 
 add_external_lib(
         OIS
