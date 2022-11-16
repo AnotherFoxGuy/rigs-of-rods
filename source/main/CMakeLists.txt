@@ -8,11 +8,13 @@ set(SOURCE_FILES
         ForwardDeclarations.h
         AppContext.{h,cpp}
         GameContext.{h,cpp}
+        ai/AutoPilot.{h,cpp}
+        ai/Navigable_Road.{h,cpp}
+        ai/VehicleAI.{h,cpp}
         audio/MumbleIntegration.{h,cpp}
         audio/Sound.{h,cpp}
         audio/SoundManager.{h,cpp}
         audio/SoundScriptManager.{h,cpp}
-        gameplay/AutoPilot.{h,cpp}
         gameplay/Character.{h,cpp}
         gameplay/CharacterFactory.{h,cpp}
         gameplay/ChatSystem.{h,cpp}
@@ -26,7 +28,6 @@ set(SOURCE_FILES
         gameplay/ScriptEvents.h
         gameplay/TorqueCurve.{h,cpp}
         gameplay/TyrePressure.{h,cpp}
-        gameplay/VehicleAI.{h,cpp}
         gfx/AdvancedScreen.h
         gfx/ColoredTextAreaOverlayElement.{h,cpp}
         gfx/ColoredTextAreaOverlayElementFactory.h

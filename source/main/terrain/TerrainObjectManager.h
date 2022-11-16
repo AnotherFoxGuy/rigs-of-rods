@@ -169,6 +169,7 @@ protected:
     std::vector<AnimatedObject>           m_animated_objects;
     std::vector<MeshObject*>              m_mesh_objects;
     std::vector<MapEntity>                m_map_entities;
+    std::vector<Road>                     m_roads;
     Terrain*           terrainManager;
     Ogre::StaticGeometry*     m_staticgeometry;
     ProceduralManager         m_procedural_mgr;

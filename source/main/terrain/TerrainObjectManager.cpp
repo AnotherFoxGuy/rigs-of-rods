@@ -215,6 +215,13 @@ void TerrainObjectManager::LoadTObjFile(Ogre::String tobj_name)
     for (ProceduralObject po : tobj->proc_objects)
     {
         m_procedural_mgr.addObject(po);
+
+        auto xd = Road();
+        for (auto pt : po.points)
+        {
+            xd.points.push_back(pt.position);
+        }
+        m_roads.push_back(xd);
     }
 
     // Vehicles
