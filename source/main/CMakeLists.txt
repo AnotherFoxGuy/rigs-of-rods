@@ -9,7 +9,7 @@ set(SOURCE_FILES
         AppContext.{h,cpp}
         GameContext.{h,cpp}
         ai/AutoPilot.{h,cpp}
-        ai/Navigable_Road.{h,cpp}
+        ai/RoadNetworkManager.{h,cpp}
         ai/VehicleAI.{h,cpp}
         audio/MumbleIntegration.{h,cpp}
         audio/Sound.{h,cpp}

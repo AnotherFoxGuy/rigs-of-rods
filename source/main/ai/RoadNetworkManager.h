@@ -28,6 +28,7 @@
 #pragma once
 
 #include "Application.h"
+#include "ProceduralManager.h"
 
 namespace RoR {
 
@@ -43,25 +44,27 @@ namespace RoR {
 /// ─────────────────           ↓
 struct Road
 {
-  Ogre::String type;
-  Ogre::String name;
-  float road_width = 6;
-  int lanes = 2;
-  std::vector<Ogre::Vector3> points;
-};
-
-class Navigable_Road : public ZeroedMemoryAllocator
-{
-public:
-    Navigable_Road();
-    ~Navigable_Road();
-
-  private:
     Ogre::String type;
     Ogre::String name;
-    float road_width;
-    int lanes;
-    std::vector<Ogre::Vector3> points;
+    float road_width = 6;
+    int lanes = 2;
+    std::vector<Ogre::Vector2> points;
+
+    Ogre::Vector2 firstpoint;
+    Ogre::Vector2 lastpoint;
+    float length;
 };
+
+class RoadNetworkManager : public ZeroedMemoryAllocator
+{
+  public:
+    RoadNetworkManager();
+    ~RoadNetworkManager();
+
+    void AddRoad(const ProceduralObject& po);
+
+  private:
+    std::vector<Road> m_roads;
+  };
 
 } // namespace RoR

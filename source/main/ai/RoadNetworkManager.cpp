@@ -20,15 +20,33 @@
     along with Rigs of Rods. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "Navigable_Road.h"
+#include "RoadNetworkManager.h"
 
 using namespace Ogre;
 using namespace RoR;
 
-Navigable_Road::Navigable_Road()
-{
-}
+RoadNetworkManager::RoadNetworkManager() = default;
+RoadNetworkManager::~RoadNetworkManager() = default;
 
-Navigable_Road::~Navigable_Road()
+void RoadNetworkManager::AddRoad(const ProceduralObject& po)
 {
+    auto r = Road();
+    float l = 0;
+
+    for (auto pt : po.points)
+    {
+        r.points.push_back(pt.position.xy());
+    }
+    Vector2 a = r.points[0];
+    r.firstpoint = a;
+    r.lastpoint = r.points[r.points.size() - 1];
+
+    for (int i = 1; i < r.points.size(); i++)
+    {
+        l += r.points[i-1].distance(r.points[1]);
+    }
+
+    r.length = l;
+
+    m_roads.push_back(r);
 }
