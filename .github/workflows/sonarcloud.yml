@@ -1,0 +1,82 @@
+name: sonarcloud scan
+on:
+  push:
+    branches:
+      - master
+      - sonarcloud
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  build:
+    name: sonarcloud scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install sonar-scanner and build-wrapper
+        uses: sonarsource/sonarcloud-github-c-cpp@v1
+        id: sonarscan
+
+      - name: Prepare cfamily cache timestamp
+        id: cfamily_cache_timestamp
+        shell: cmake -P {0}
+        run: |
+          string(TIMESTAMP current_date "%Y-%m-%d-%H;%M;%S" UTC)
+          message("::set-output name=timestamp::${current_date}")
+
+      - name: cfamily cache files
+        uses: actions/cache@v2.1.7
+        with:
+          path: cfamily-cache
+          key: cfamily-cache-${{ steps.cfamily_cache_timestamp.outputs.timestamp }}
+          restore-keys: |
+            cfamily-cache-
+
+      - name: Cache conan
+        uses: actions/cache@v2.1.7
+        with:
+          key: conan-linux-${{ hashFiles('cmake/DependenciesConfig.cmake') }}
+          path: ~/.conan/
+
+      - name: Install dependencies
+        run: |
+          curl "https://raw.githubusercontent.com/AnotherFoxGuy/ci-scripts/main/install-conan.sh" | sudo bash
+          wget -nv https://cdn.anotherfoxguy.com/sonar-scanner/ror -O run-sonar-scanner
+          sudo chmod 777 run-sonar-scanner
+          sudo apt-get update
+          sudo apt-get -y install \
+                  pkg-config \
+                  ninja-build \
+                  nvidia-cg-toolkit \
+                  libfreetype6-dev \
+                  libfreeimage-dev \
+                  libzzip-dev \
+                  libois-dev \
+                  libgl1-mesa-dev \
+                  libglu1-mesa-dev \
+                  libx11-dev \
+                  libxt-dev \
+                  libxaw7-dev \
+                  libxrandr-dev \
+                  libopenjp2-7-dev
+
+      - name: Configure
+        run: |
+          conan config set general.revisions_enabled=1
+          echo "tools.system.package_manager:mode = install" > ~/.conan/global.conf
+          echo "tools.system.package_manager:sudo = True" >> ~/.conan/global.conf
+          cmake -DCMAKE_BUILD_TYPE=Debug .
+
+      - name: Run build-wrapper
+        run: build-wrapper-linux-x86-64 --out-dir bw-output make -j4
+
+      - name: Run sonar-scanner
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_SCANNER_EXE: ${{ steps.sonarscan.outputs.sonar-scanner-binary }}
+        run: ./run-sonar-scanner
+
+      - name: Clean Conan pkgs
+        run: conan remove "*" -fsb
