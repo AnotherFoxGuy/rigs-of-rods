@@ -1,0 +1,56 @@
+name: sonarcloud scan
+on:
+  push:
+    branches:
+      - master
+      - sonarcloud
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  build:
+    name: sonarcloud scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install sonar-scanner and build-wrapper
+        uses: sonarsource/sonarcloud-github-c-cpp@v1
+        id: sonarscan
+        
+      - name: Cache conan
+        uses: actions/cache@v3
+        with:
+          key: conan-ubuntu-${{ hashFiles('conanfile.py') }}
+          path: ~/.conan2/
+
+      - name: Install dependencies
+        run: |
+          curl "https://raw.githubusercontent.com/AnotherFoxGuy/ci-scripts/main/install-conan.sh" | sudo bash
+          sudo apt-get update
+          wget -nv https://cdn.anotherfoxguy.com/sonar-scanner/ror -O run-sonar-scanner
+          sudo chmod 777 run-sonar-scanner
+
+      - name: Configure
+        run: |
+          conan profile detect --force
+          echo "tools.system.package_manager:mode = install" > ~/.conan2/global.conf
+          echo "tools.system.package_manager:sudo = True" >> ~/.conan2/global.conf
+          conan remote add ror-conan https://git.anotherfoxguy.com/api/packages/rorbot/conan -f
+          conan install . -s build_type=Release -b missing -pr:b=default
+          cmake --preset conan-release -DCMAKE_INSTALL_PREFIX=redist -DCREATE_CONTENT_FOLDER=ON
+        shell: bash
+
+      - name: Run build-wrapper
+        run: build-wrapper-linux-x86-64 --out-dir bw-output make -j4
+
+      - name: Run sonar-scanner
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_SCANNER_EXE: ${{ steps.sonarscan.outputs.sonar-scanner-binary }}
+        run: ./run-sonar-scanner
+
+      - name: Clean Conan pkgs
+        run: conan cache clean "*" -sbd
+        shell: bash
