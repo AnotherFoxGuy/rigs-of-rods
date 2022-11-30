@@ -1,13 +1,6 @@
 include(DependenciesFunctions)
 find_package(Threads REQUIRED)
 
-if (USE_PACKAGE_MANAGER)
-    conan_add_remote(NAME ror-conan
-            URL https://git.anotherfoxguy.com/api/packages/rorbot/conan
-            VERIFY_SSL True
-            )
-endif ()
-
 set(ROR_FEAT_TIMING OFF)
 
 if (USE_PACKAGE_MANAGER)
