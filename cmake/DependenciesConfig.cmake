@@ -14,7 +14,7 @@ endif ()
 
 add_external_lib(
         OGRE
-        ogre3d/13.5.3@anotherfoxguy/stable
+        ogre3d/13.6.0@anotherfoxguy/stable
         CONAN_OPTIONS ogre3d:resourcemanager_strict=off # ogre3d:rendersystem_vulkan=True
         REQUIRED
         # PKG_CONFIG "OGRE = 1.11.6"
