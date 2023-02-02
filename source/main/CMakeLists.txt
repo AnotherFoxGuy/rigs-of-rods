@@ -33,7 +33,7 @@ set(SOURCE_FILES
         gfx/GfxActor.{h,cpp}
         gfx/GfxData.h
         gfx/GfxScene.{h,cpp}
-        gfx/HydraxWater.{h,cpp}
+        gfx/OgreWaterWater.{h,cpp}
         gfx/IWater.h
         gfx/MovableText.{h,cpp}
         gfx/Renderdash.{h,cpp}
@@ -46,29 +46,6 @@ set(SOURCE_FILES
         gfx/Water.{h,cpp}
         gfx/camera/CameraManager.{h,cpp}
         gfx/camera/PerVehicleCameraContext.h
-        gfx/hydrax/CfgFileManager.{h,cpp}
-        gfx/hydrax/DecalsManager.{h,cpp}
-        gfx/hydrax/Enums.{h,cpp}
-        gfx/hydrax/FFT.{h,cpp}
-        gfx/hydrax/GodRaysManager.{h,cpp}
-        gfx/hydrax/GPUNormalMapManager.{h,cpp}
-        gfx/hydrax/Help.{h,cpp}
-        gfx/hydrax/Hydrax.{h,cpp}
-        gfx/hydrax/Image.{h,cpp}
-        gfx/hydrax/MaterialManager.{h,cpp}
-        gfx/hydrax/Mesh.{h,cpp}
-        gfx/hydrax/Module.{h,cpp}
-        gfx/hydrax/Noise.{h,cpp}
-        gfx/hydrax/Perlin.{h,cpp}
-        gfx/hydrax/Prerequisites.{h,cpp}
-        gfx/hydrax/PressurePoint.{h,cpp}
-        gfx/hydrax/ProjectedGrid.{h,cpp}
-        gfx/hydrax/RadialGrid.{h,cpp}
-        gfx/hydrax/Real.{h,cpp}
-        gfx/hydrax/RttManager.{h,cpp}
-        gfx/hydrax/SimpleGrid.{h,cpp}
-        gfx/hydrax/TextureManager.{h,cpp}
-        gfx/hydrax/Wave.{h,cpp}
         gfx/particle/ExtinguishableFireAffector.{h,cpp}
         gfx/particle/ExtinguishableFireAffectorFactory.h
         gfx/particle/FireExtinguisherAffector.{h,cpp}
@@ -312,13 +289,13 @@ endif ()
 
 target_include_directories(${BINNAME} PRIVATE
         ${CMAKE_SOURCE_DIR}/external/header_only
+        ${CMAKE_SOURCE_DIR}/external/ogrewater
         .
         audio
         datatypes
         gameplay
         gfx
         gfx/camera
-        gfx/hydrax
         gfx/particle
         gfx/skyx
         gui
@@ -377,7 +354,7 @@ if (UNIX AND NOT APPLE)
     #  include_directories(${GTK_INCLUDE_DIRS})
     set(OS_LIBS "X11 -l${CMAKE_DL_LIBS} -lrt")
 endif ()
-target_link_libraries(${BINNAME} PRIVATE ${OS_LIBS} version_info)
+target_link_libraries(${BINNAME} PRIVATE ${OS_LIBS} version_info OgreWater)
 
 # --- Threading support (still needed for GCC even with C++11)
 set(CMAKE_THREAD_PREFER_PTHREAD YES)

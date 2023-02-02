@@ -74,7 +74,7 @@ DECLARE_RESOURCE_PACK( DASHBOARDS,            "dashboards",           "Dashboard
 DECLARE_RESOURCE_PACK( FAMICONS,              "famicons",             "FamiconsRG");
 DECLARE_RESOURCE_PACK( FLAGS,                 "flags",                "FlagsRG");
 DECLARE_RESOURCE_PACK( FONTS,                 "fonts",                "FontsRG");
-DECLARE_RESOURCE_PACK( HYDRAX,                "hydrax",               "HydraxRG");
+DECLARE_RESOURCE_PACK( HYDRAX,                "ogrewater",            "OgreWaterRG");
 DECLARE_RESOURCE_PACK( ICONS,                 "icons",                "IconsRG");
 DECLARE_RESOURCE_PACK( MATERIALS,             "materials",            "MaterialsRG");
 DECLARE_RESOURCE_PACK( MESHES,                "meshes",               "MeshesRG");
@@ -148,6 +148,10 @@ void ContentManager::InitContentManager()
         App::sys_config_dir->getStr(), "FileSystem", RGN_CONFIG, /*recursive=*/false, /*readOnly=*/false);
     ResourceGroupManager::getSingleton().addResourceLocation(
         App::sys_savegames_dir->getStr(), "FileSystem", RGN_SAVEGAMES, /*recursive=*/false, /*readOnly=*/false);
+
+    Ogre::String fdvfvdfvfvffv = PathCombine(App::sys_resources_dir->getStr(), "OgreWaterWater");
+    ResourceGroupManager::getSingleton().addResourceLocation(fdvfvdfvfvffv, "FileSystem", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    ResourceGroupManager::getSingleton().initialiseResourceGroup(Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 
     Ogre::ScriptCompilerManager::getSingleton().setListener(this);
 

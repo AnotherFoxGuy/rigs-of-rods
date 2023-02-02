@@ -69,7 +69,7 @@ public:
     TerrainGeometryManager* getGeometryManager()          { return m_geometry_manager; }
     ProceduralManagerPtr    getProceduralManager();
     TerrainObjectManager*   getObjectManager()            { return m_object_manager; }
-    HydraxWater*            getHydraxManager()            { return m_hydrax_water; }
+    OgreWaterWater *            getHydraxManager()            { return m_hydrax_water; }
     SkyManager*             getSkyManager();
     SkyXManager*            getSkyXManager()              { return SkyX_manager; }
     RTSSManager*            getRTSSManager()              { return m_rtss_manager; }
@@ -129,7 +129,7 @@ private:
     RTSSManager*            m_rtss_manager;
     SkyManager*             m_sky_manager;
     SkyXManager*            SkyX_manager;
-    HydraxWater*            m_hydrax_water;
+    OgreWaterWater *            m_hydrax_water;
 
     // Properties
 

@@ -24,15 +24,15 @@
 #include "ActorManager.h"
 #include "CacheSystem.h"
 #include "Collisions.h"
-#include "Renderdash.h"
-#include "GfxScene.h"
 #include "GUIManager.h"
 #include "GUI_LoadingWindow.h"
 #include "GUI_SurveyMap.h"
-#include "HydraxWater.h"
+#include "GfxScene.h"
 #include "Language.h"
-#include "ScriptEngine.h"
+#include "OgreWaterWater.h"
 #include "RTSSManager.h"
+#include "Renderdash.h"
+#include "ScriptEngine.h"
 #include "SkyManager.h"
 #include "SkyXManager.h"
 #include "TerrainGeometryManager.h"
@@ -392,27 +392,8 @@ void RoR::Terrain::initWater()
 
     if (App::gfx_water_mode->getEnum<GfxWaterMode>() == GfxWaterMode::HYDRAX)
     {
-        // try to load hydrax config
-        if (!m_def.hydrax_conf_file.empty() && ResourceGroupManager::getSingleton().resourceExistsInAnyGroup(m_def.hydrax_conf_file))
-        {
-            m_hydrax_water = new HydraxWater(m_def.water_height, m_def.hydrax_conf_file);
-        }
-        else
-        {
-            // no config provided, fall back to the default one
-            m_hydrax_water = new HydraxWater(m_def.water_height);
-        }
-
+        m_hydrax_water = new OgreWaterWater(m_def.water_height);
         m_water = std::unique_ptr<IWater>(m_hydrax_water);
-
-        //Apply depth technique to the terrain
-        TerrainGroup::TerrainIterator ti = m_geometry_manager->getTerrainGroup()->getTerrainIterator();
-        while (ti.hasMoreElements())
-        {
-            Ogre::Terrain* t = ti.getNext()->instance;
-            MaterialPtr ptr = t->getMaterial();
-            m_hydrax_water->GetHydrax()->getMaterialManager()->addDepthTechnique(ptr->createTechnique());
-        }
     }
     else
     {

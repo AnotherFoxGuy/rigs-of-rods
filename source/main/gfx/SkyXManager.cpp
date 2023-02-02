@@ -25,7 +25,7 @@
 #include "CameraManager.h"
 #include "GameContext.h"
 #include "GfxScene.h"
-#include "HydraxWater.h"
+#include "OgreWaterWater.h"
 #include "Terrain.h"
 #include "TerrainGeometryManager.h"
 
@@ -89,13 +89,6 @@ bool SkyXManager::UpdateSkyLight()
 
 	// Calculate current color gradients point
 	float point = (-lightDir.y + 1.0f) / 2.0f;
-
-    if (App::GetGameContext()->GetTerrain()->getHydraxManager ()) 
-    {
-        App::GetGameContext()->GetTerrain()->getHydraxManager ()->GetHydrax ()->setWaterColor (mWaterGradient.getColor (point));
-        App::GetGameContext()->GetTerrain()->getHydraxManager ()->GetHydrax ()->setSunPosition (sunPos*0.1);
-    }
-		
 
 	mLight0 = App::GetGfxScene()->GetSceneManager()->getLight("Light0");
 	mLight1 = App::GetGfxScene()->GetSceneManager()->getLight("Light1");
