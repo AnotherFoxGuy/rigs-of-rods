@@ -3,6 +3,15 @@
   "extends": [
     "config:base"
   ],
+  "packageRules": [
+    {
+      "matchDatasources": ["conan"],
+      "registryUrls": [
+        "https://center.conan.io",
+        "https://git.anotherfoxguy.com/api/packages/rorbot/conan"
+      ]
+    }
+  ],
   "conan": {
     "enabled": true
   }
