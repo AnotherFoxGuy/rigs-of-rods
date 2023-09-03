@@ -63,7 +63,7 @@ jobs:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
         if: env.BUTLER_API_KEY != null && github.ref == 'refs/heads/master'
         run: |
-          curl "https://raw.githubusercontent.com/AnotherFoxGuy/ci-scripts/main/install-butler.sh" | sudo bash
+          curl "https://git.anotherfoxguy.com/AnotherFoxGuy/install-scripts/raw/branch/main/install-butler.sh" | sudo bash
           butler push redist rigs-of-rods/rigs-of-rods-dev:linux-ci --userversion CIBuild-${GITHUB_RUN_NUMBER}-commit-${GITHUB_SHA}
         shell: bash
 
