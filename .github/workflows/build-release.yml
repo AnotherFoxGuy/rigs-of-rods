@@ -41,7 +41,7 @@ jobs:
         shell: cmd
 
       - name: Build
-        run: ninja install
+        run: ninja package
         shell: cmd
 
       - name: Upload redist folder
