@@ -12,7 +12,7 @@ jobs:
       CONAN_USER_HOME_SHORT: None
     strategy:
       matrix:
-        installer_type: [Online, Offline, Bundled]
+        installer_type: [Online, Offline]
     steps:
       - run: echo $env:BUILD_TOOLS_PATH | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
@@ -50,7 +50,7 @@ jobs:
           name: Installer-${{ matrix.installer_type }}
           path: |
             _CPack_Packages/win64/INNOSETUP/rigs-of-rods-*.exe
-            _CPack_Packages/win64/INNOSETUP/rigs-of-rods-*.bin*
+            CPackUploads/*
 
       - name: Clean Conan pkgs
         run: conan cache clean "*" -sbd
