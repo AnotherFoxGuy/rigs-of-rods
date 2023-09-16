@@ -9,7 +9,7 @@ class RoR(ConanFile):
     generators = "CMakeToolchain", "CMakeDeps"
 
     def requirements(self):
-        self.requires("angelscript/2.35.1")
+        self.requires("angelscript/2.36.1")
         self.requires("discord-rpc/3.4.0@anotherfoxguy/stable")
         self.requires("fmt/8.0.1")
         self.requires("libcurl/7.79.1")
