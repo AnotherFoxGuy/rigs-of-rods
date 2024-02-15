@@ -1,7 +1,8 @@
 import os
 from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps
-from conan.tools.files import copy
+from conan.tools.files import copy, save
+
 
 class RoR(ConanFile):
     name = "Rigs of Rods"
@@ -38,13 +39,30 @@ class RoR(ConanFile):
             deps.configuration = "RelWithDebInfo"
             deps.generate()
 
+        bindirs = []
         for dep in self.dependencies.values():
-            for f in dep.cpp_info.bindirs:
-                self.cp_data(f)
-            for f in dep.cpp_info.libdirs:
-                self.cp_data(f)
+            bindirs += dep.cpp_info.bindirs
 
-    def cp_data(self, src):
-        bindir = os.path.join(self.build_folder, "bin")
-        copy(self, "*.dll", src, bindir, False)
-        copy(self, "*.so*", src, bindir, False)
+        bindirs_win = []
+        for dir in bindirs:
+            bindirs_win.append(os.path.join(dir, f"{self.settings.build_type}"))
+
+        conan_data = 'set(CONAN_BIN_DIRS "%s;%s")\n' % (
+            ";".join(bindirs).replace("\\", "/"),
+            ";".join(bindirs_win).replace("\\", "/"),
+        )
+
+        save(
+            self,
+            os.path.join(self.build_folder, "cmake", "ConanBinDirs.cmake"),
+            conan_data,
+        )
+
+        libdir = os.path.join(self.build_folder, "bin")
+        if self.settings.os == "Windows":
+            for f in self.dependencies["ogre3d"].cpp_info.bindirs:
+                copy(self, "*.dll", f, libdir, False)
+                copy(self, "*.exe", f, libdir, False)
+        else:
+            for f in self.dependencies["ogre3d"].cpp_info.libdirs:
+                copy(self, "*.so*", f, libdir, False)

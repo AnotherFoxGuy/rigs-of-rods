@@ -224,7 +224,7 @@ set(SOURCE_FILES
         utils/WriteTextToTexture.{h,cpp}
         utils/memory/RefCountingObject.h
         utils/memory/RefCountingObjectPtr.h
-        )
+)
 
 if (ROR_USE_ANGELSCRIPT)
     list(APPEND SOURCE_FILES
@@ -249,7 +249,7 @@ if (ROR_USE_ANGELSCRIPT)
             scripting/bindings/SoundScriptAngelscript.cpp
             scripting/bindings/TerrainAngelscript.cpp
             scripting/bindings/VehicleAiAngelscript.cpp
-            )
+    )
 endif ()
 
 include(SourceFileUtils)
@@ -306,7 +306,7 @@ endif ()
 target_compile_definitions(${BINNAME} PRIVATE
         USE_MUMBLE  # build with support for Mumble positional audio, has no dependencies but requires linking against librt on UNIX
         #FEAT_DEBUG_MUTEX
-        )
+)
 
 if (ROR_FEAT_TIMING)
     target_compile_definitions(${BINNAME} PRIVATE FEAT_TIMING)
@@ -363,7 +363,7 @@ target_include_directories(${BINNAME} PRIVATE
         threadpool
         utils
         utils/memory
-        )
+)
 
 
 ####################################################################################################
@@ -405,7 +405,7 @@ target_link_libraries(${BINNAME} PRIVATE
         ois::ois
         fmt::fmt
         MyGUI::MyGUI
-        )
+)
 target_include_directories(${BINNAME} PRIVATE ${OGRE_INCLUDE_DIRS} ${RapidJSON_INCLUDE_DIRS})
 if (TARGET MyGUI::OgrePlatform)
     target_link_libraries(${BINNAME} PRIVATE MyGUI::OgrePlatform)
@@ -459,6 +459,16 @@ endif ()
 ####################################################################################################
 #  POST-BUILD STEPS
 ####################################################################################################
+
+add_custom_command(
+        TARGET ${BINNAME}
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND}
+        -DEXECUTABLE="$<TARGET_FILE:${BINNAME}>"
+        -DBIN_DIR="${CMAKE_BINARY_DIR}"
+        -DLIB_DIR="$<TARGET_FILE_DIR:${BINNAME}>"
+        -P "${CMAKE_SOURCE_DIR}/cmake/FixupBundle.cmake"
+)
 
 if (USE_PCH)
     target_precompile_headers(${BINNAME} PRIVATE pch.h)
@@ -538,6 +548,9 @@ else ()
     install(CODE "file(GLOB_RECURSE files ${RUNTIME_OUTPUT_DIRECTORY}/*.so)
             file(INSTALL \${files} DESTINATION \${CMAKE_INSTALL_PREFIX}/lib FOLLOW_SYMLINK_CHAIN)")
 endif ()
+
+set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ".")
+include(InstallRequiredSystemLibraries)
 
 
 #  CPack
