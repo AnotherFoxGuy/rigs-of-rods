@@ -79,7 +79,7 @@ jobs:
 
   build-msvc:
     name: Windows build
-    runs-on: windows-2019
+    runs-on: windows-latest
     env:
       BUILD_TOOLS_PATH: C:\apps\build-tools\
       CONAN_USER_HOME_SHORT: None
@@ -101,12 +101,12 @@ jobs:
           path: ~/.conan2
 
       - name: Enable Developer Command Prompt
-        uses: ilammy/msvc-dev-cmd@v1.13.0
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure
         run: |
           conan remote add ror-conan https://git.anotherfoxguy.com/api/packages/rorbot/conan -f
-          conan install . -b missing -pr:b=tools/conan-profiles/vs-19-release-ninja -pr=tools/conan-profiles/vs-19-release-ninja
+          conan install . -b missing -pr:b=tools/conan-profiles/vs-22-release-ninja -pr=tools/conan-profiles/vs-22-release-ninja
           cmake --preset conan-release -DCMAKE_INSTALL_PREFIX=redist -DCREATE_CONTENT_FOLDER=ON
         shell: cmd
 
