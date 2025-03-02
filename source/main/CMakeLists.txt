@@ -548,6 +548,7 @@ endif ()
 #  CPack
 # -----------------------
 set(CPACK_PACKAGE_NAME "Rigs of Rods")
+set(CPACK_PACKAGE_VERSION "2025.06-RC2")
 set(CPACK_PACKAGE_FILE_NAME "rigs-of-rods-${CMAKE_PROJECT_VERSION}-${ROR_BUILD_INSTALLER}")
 set(CPACK_PACKAGE_DESCRIPTION "Rigs of Rods soft-body physics simulator")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Rigs of Rods is an open source vehicle simulator based on soft-body physics.")
@@ -568,7 +569,7 @@ if (WIN32 AND NOT ROR_BUILD_INSTALLER STREQUAL "Off")
     set(CPACK_INNOSETUP_ICON_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ror.ico")
     set(CPACK_INNOSETUP_SETUP_WizardImageFile "${CMAKE_SOURCE_DIR}/tools/windows/RoRSetupLarge.bmp")
     set(CPACK_INNOSETUP_SETUP_WizardSmallImageFile "${CMAKE_SOURCE_DIR}/tools/windows/ror-64.bmp")
-    set(CPACK_INNOSETUP_SETUP_AppId "{{EF536888-919D-47C0-8675-2F7AFA52EE27}")
+    set(CPACK_INNOSETUP_SETUP_AppId "{{8D2BA815-C552-495F-A646-9320D8D9E5AF}")
 
     set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CPACK_PACKAGE_NAME}")
 
