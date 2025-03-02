@@ -36,7 +36,11 @@ jobs:
       - name: Configure
         run: |
           conan remote add ror-conan https://git.anotherfoxguy.com/api/packages/rorbot/conan -f
-          cmake . -GNinja -DCMAKE_BUILD_TYPE=Release -Bbuild -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=cmake/conan_provider.cmake -DCREATE_CONTENT_FOLDER=ON -DROR_BUILD_INSTALLER=${{ matrix.installer_type }}
+          cmake . -GNinja -DCMAKE_BUILD_TYPE=Release -Bbuild -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=cmake/conan_provider.cmake -DCREATE_CONTENT_FOLDER=ON -DROR_BUILD_INSTALLER=${{ matrix.installer_type }} -DROR_BUILD_DEV_VERSION=OFF
+        shell: cmd
+
+      - name: Clean Conan pkgs
+        run: conan cache clean "*" -sbd
         shell: cmd
 
       - name: Build
@@ -52,7 +56,3 @@ jobs:
           path: |
             build/rigs-of-rods-*.exe
             build/CPackUploads/*
-
-      - name: Clean Conan pkgs
-        run: conan cache clean "*" -sbd
-        shell: cmd
