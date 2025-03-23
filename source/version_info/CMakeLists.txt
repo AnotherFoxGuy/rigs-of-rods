@@ -23,7 +23,7 @@ else()
     set(VERSION_FLAGS 
         -DBUILD_DEV_VERSION=OFF 
         -DBUILD_CUSTOM_VERSION=TRUE 
-        -DCUSTOM_VERSION=${PROJECT_VERSION}
+        -DCUSTOM_VERSION="2025.03-RC1"
     )
 endif()
 

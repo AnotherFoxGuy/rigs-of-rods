@@ -547,6 +547,7 @@ endif ()
 #  CPack
 # -----------------------
 set(CPACK_PACKAGE_NAME "Rigs of Rods")
+set(CPACK_PACKAGE_VERSION "2025.03-RC1")
 set(CPACK_PACKAGE_FILE_NAME "rigs-of-rods-${CMAKE_PROJECT_VERSION}-${ROR_BUILD_INSTALLER}")
 set(CPACK_PACKAGE_DESCRIPTION "Rigs of Rods soft-body physics simulator")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Rigs of Rods is an open source vehicle simulator based on soft-body physics.")
