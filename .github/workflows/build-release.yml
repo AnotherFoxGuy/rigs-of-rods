@@ -1,0 +1,59 @@
+---
+name: Build game
+
+on: [ push, pull_request ]
+
+jobs:
+  build-msvc:
+    name: Windows installer ${{ matrix.installer_type }}
+    runs-on: windows-2022
+    env:
+      BUILD_TOOLS_PATH: C:\apps\build-tools\
+      CONAN_USER_HOME_SHORT: None
+    strategy:
+      matrix:
+        installer_type: [Offline, Online]
+    steps:
+      - run: echo $env:BUILD_TOOLS_PATH | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - name: Install Build tools
+        run: git clone https://git.anotherfoxguy.com/AnotherFoxGuy/build-tools.git %BUILD_TOOLS_PATH%
+        shell: cmd
+
+      - name: Cache conan packages
+        uses: actions/cache@v5
+        with:
+          key: conan-windows-${{ hashFiles('conanfile.py') }}
+          path: ~/.conan2
+
+      - name: Enable Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure
+        run: |
+          conan remote add ror-conan https://git.anotherfoxguy.com/api/packages/rorbot/conan -f
+          cmake . -GNinja -DCMAKE_BUILD_TYPE=Release -Bbuild -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=cmake/conan_provider.cmake -DCREATE_CONTENT_FOLDER=ON -DROR_BUILD_INSTALLER=${{ matrix.installer_type }} -DROR_BUILD_DEV_VERSION=OFF
+        shell: cmd
+
+      - name: Clean Conan pkgs
+        run: conan cache clean "*" -sbd
+        shell: cmd
+
+      - name: Build
+        run: |
+          cd build
+          ninja package
+        shell: cmd
+
+      - name: Upload redist folder
+        uses: actions/upload-artifact@v6
+        with:
+          name: Installer-${{ matrix.installer_type }}
+          path: |
+            build/rigs-of-rods-*.exe
+            build/rigs-of-rods-*.zip
+            build/CPackUploads/*
