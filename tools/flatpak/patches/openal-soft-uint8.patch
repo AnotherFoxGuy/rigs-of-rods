@@ -1,0 +1,10 @@
+--- a/alc/alu.h
++++ b/alc/alu.h
+@@ -2,6 +2,7 @@
+ #define ALU_H
+ 
+ #include <bitset>
++#include <cstdint>
+ 
+ #include "aloptional.h"
+ 

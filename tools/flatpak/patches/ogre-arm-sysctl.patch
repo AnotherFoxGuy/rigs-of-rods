@@ -1,0 +1,15 @@
+--- a/OgreMain/src/OgrePlatformInformation.cpp
++++ b/OgreMain/src/OgrePlatformInformation.cpp
+@@ -36,9 +36,9 @@
+ 
+     #if OGRE_PLATFORM == OGRE_PLATFORM_ANDROID
+         #include <cpu-features.h>
+-    #elif OGRE_CPU == OGRE_CPU_ARM 
+-        #include <sys/sysctl.h>
+-        #if __MACH__
++    #elif OGRE_CPU == OGRE_CPU_ARM
++        #if OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS
++            #include <sys/sysctl.h>
+             #include <mach/machine.h>
+             #ifndef CPU_SUBTYPE_ARM64_V8
+                 #define CPU_SUBTYPE_ARM64_V8 ((cpu_subtype_t) 1)
