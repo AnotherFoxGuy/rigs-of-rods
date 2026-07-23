@@ -1,30 +1,20 @@
 name: Build flatpak
 on:
   push:
-    branches: [ master, flatpak ]
+    branches: [master, flatpak]
 jobs:
-  linux:
+  flatpak:
+    name: "Flatpak"
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      options: --privileged
     steps:
-      - name: Install Dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y flatpak flatpak-builder
-          
-      - name: Set up Flatpak
-        run: |
-          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-          flatpak install --user -y flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
-
-      - uses: actions/checkout@v7
-
-      - name: Build Rigs of Rods
-        run: |
-          flatpak-builder --repo=localrepo --user tmp org.rigsofrods.RigsOfRods.yml
-
-      - name: Build Flatpak bundle
-        run: |
-          flatpak build-bundle localrepo "Rigs-of-Rods.flatpak" org.rigsofrods.RigsOfRods
+      - uses: actions/checkout@v4
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: Rigs-of-Rods.flatpak
+          manifest-path: org.rigsofrods.RigsOfRods.yml
 
       - name: Upload Flatpak artifact
         uses: actions/upload-artifact@v7
