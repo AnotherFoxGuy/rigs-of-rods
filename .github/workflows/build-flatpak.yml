@@ -1,0 +1,29 @@
+name: Build flatpak
+on:
+  push:
+    branches: [ master, flatpak ]
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y flatpak flatpak-builder
+
+      - uses: actions/checkout@v7
+
+      - name: Build Rigs of Rods
+        run: |
+          flatpak-builder --repo=localrepo --user tmp org.rigsofrods.RigsOfRods.yml
+
+      - name: Build Flatpak bundle
+        run: |
+          flatpak build-bundle localrepo "Rigs-of-Rods.flatpak" org.rigsofrods.RigsOfRods
+
+      - name: Upload Flatpak artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Rigs-of-Rods-flatpak
+          path: "Rigs-of-Rods.flatpak"
+          retention-days: 30
