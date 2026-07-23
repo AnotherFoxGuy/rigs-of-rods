@@ -10,6 +10,11 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y flatpak flatpak-builder
+          
+      - name: Set up Flatpak
+        run: |
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
 
       - uses: actions/checkout@v7
 
