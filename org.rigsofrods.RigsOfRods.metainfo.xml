@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.rigsofrods.RigsOfRods</id>
+  <name>Rigs of Rods</name>
+  <summary>Open-source soft-body vehicle simulator and physics sandbox</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <developer id="org.rigsofrods">
+    <name>Rigs of Rods contributors</name>
+  </developer>
+  <launchable type="desktop-id">org.rigsofrods.RigsOfRods.desktop</launchable>
+  <icon type="stock">org.rigsofrods.RigsOfRods</icon>
+  <url type="homepage">https://www.rigsofrods.org</url>
+  <url type="help">https://docs.rigsofrods.org</url>
+  <url type="bugtracker">https://github.com/RigsOfRods/rigs-of-rods/issues</url>
+  <url type="vcs-browser">https://github.com/RigsOfRods/rigs-of-rods</url>
+  <content_rating type="oars-1.1"/>
+  <categories>
+    <category>Game</category>
+    <category>Simulation</category>
+  </categories>
+  <keywords>
+    <keyword>physics</keyword>
+    <keyword>vehicles</keyword>
+    <keyword>simulation</keyword>
+    <keyword>sandbox</keyword>
+    <keyword>modding</keyword>
+  </keywords>
+  <description>
+    <p>
+      Rigs of Rods is an open-source physics sandbox that simulates the motion
+      and deformation of vehicles using a real-time soft-body engine.
+    </p>
+    <p>
+      It features many vehicle types, large environments, and a modding-focused
+      workflow so the community can create and share new content.
+    </p>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Rigs of Rods screenshot</caption>
+      <image type="source">https://upload.wikimedia.org/wikipedia/commons/f/fa/Rigs_of_Rods_2021_02.png</image>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="2026.01" date="2026-01-03"/>
+  </releases>
+</component>

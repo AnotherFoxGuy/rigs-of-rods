@@ -1,0 +1,13 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -188,8 +188,8 @@
+ if(UNIX)
+
+     if (NOT APPLE)
+-        add_dependencies(OIS X11)
+-        target_link_libraries(OIS X11)
++        #add_dependencies(OIS X11)
++        target_link_libraries(OIS X11::X11)
+     endif()
+
+     set_target_properties(OIS PROPERTIES

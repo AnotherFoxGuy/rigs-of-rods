@@ -1,0 +1,283 @@
+id: org.rigsofrods.RigsOfRods
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+command: RoR
+finish-args:
+  - --socket=pulseaudio
+  - --share=ipc
+  - --device=dri
+  - --socket=x11
+  - --socket=wayland
+  - --share=network
+
+modules:
+  - name: libxmu
+    buildsystem: autotools
+    config-opts:
+      - --prefix=/app
+    sources:
+      - type: archive
+        url: https://www.x.org/releases/individual/lib/libXmu-1.2.1.tar.xz
+        sha256: fcb27793248a39e5fcc5b9c4aec40cc0734b3ca76aac3d7d1c264e7f7e14e8b2
+
+  - name: libxaw
+    buildsystem: autotools
+    config-opts:
+      - --prefix=/app
+    sources:
+      - type: archive
+        url: https://www.x.org/releases/individual/lib/libXaw-1.0.16.tar.xz
+        sha256: 731d572b54c708f81e197a6afa8016918e2e06dfd3025e066ca642a5b8c39c8f
+
+  - name: glu
+    buildsystem: meson
+    config-opts:
+      - -Dgl_provider=glvnd
+    sources:
+      - type: archive
+        url: https://mesa.freedesktop.org/archive/glu/glu-9.0.3.tar.xz
+        sha256: bd43fe12f374b1192eb15fe20e45ff456b9bc26ab57f0eee919f96ca0f8a330f
+
+  - name: zziplib
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DZZIPMMAPPED=OFF
+      - -DZZIPCOMPAT=OFF
+      - -DZZIPLIBTOOL=OFF
+      - -DZZIPFSEEKO=OFF
+      - -DZZIPWRAP=OFF
+      - -DZZIPSDL=OFF
+      - -DZZIPBINS=OFF
+      - -DZZIPTEST=OFF
+      - -DZZIPDOCS=OFF
+      - -DBUILD_STATIC_LIBS=TRUE
+      - -DBUILD_SHARED_LIBS=ON
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    sources:
+      - type: archive
+        url: https://github.com/gdraheim/zziplib/archive/refs/tags/v0.13.78.tar.gz
+        sha256: feaeee7c34f18aa27bd3da643cc6a47d04d2c41753a59369d09102d79b9b0a31
+
+  - name: fmt
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DFMT_TEST=OFF
+      - -DBUILD_SHARED_LIBS=ON
+    sources:
+      - type: archive
+        url: https://github.com/fmtlib/fmt/releases/download/12.1.0/fmt-12.1.0.zip
+        sha256: 695fd197fa5aff8fc67b5f2bbc110490a875cdf7a41686ac8512fb480fa8ada7
+
+  - name: rapidjson
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DRAPIDJSON_BUILD_DOC=OFF
+      - -DRAPIDJSON_BUILD_EXAMPLES=OFF
+      - -DRAPIDJSON_BUILD_TESTS=OFF
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    sources:
+      - type: archive
+        url: https://github.com/Tencent/rapidjson/archive/24b5e7a8b27f42fa16b96fc70aade9106cf7102f.tar.gz
+        sha256: 2d2601a82d2d3b7e143a3c8d43ef616671391034bc46891a9816b79cf2d3e7a8
+
+  - name: openal-soft
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DALSOFT_UTILS=OFF
+      - -DALSOFT_EXAMPLES=OFF
+      - -DALSOFT_TESTS=OFF
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    sources:
+      - type: archive
+        url: https://github.com/kcat/openal-soft/releases/download/1.24.3/openal-soft-1.24.3.tar.bz2
+        sha256: cb5e6197a1c0da0edcf2a81024953cc8fa8545c3b9474e48c852af709d587892
+
+  - name: nvidia-cg-toolkit
+    buildsystem: simple
+    only-arches:
+      - x86_64
+    build-commands:
+      - install -Dm755 usr/bin/cgc /app/bin/cgc
+      - install -Dm644 -t /app/include/Cg usr/include/Cg/*
+      - install -Dm644 -t /app/lib usr/lib64/*
+      - install -Dm644 usr/local/Cg/docs/license.txt /app/share/licenses/nvidia-cg-toolkit/license.txt
+      - cp -r usr/local/Cg /app/share/
+      - find /app/share/Cg -type d -exec chmod 755 '{}' ';'
+      - find /app/share/Cg -type f -exec chmod 644 '{}' ';'
+    sources:
+      - type: archive
+        url: https://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86_64.tgz
+        sha256: e8ff01e6cc38d1b3fd56a083f5860737dbd2f319a39037528fb1a74a89ae9878
+
+  - name: ois
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DOIS_BUILD_DEMOS=OFF
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    sources:
+      - type: archive
+        url: https://github.com/wgois/OIS/archive/refs/tags/v1.5.1.tar.gz
+        sha256: 614f6ef6d69cf6d84f1b50efff46a6c1acce426933e5f0dcf29862ea8332af73
+      - type: patch
+        path: tools/flatpak/patches/OIS-X11.patch
+
+  - name: freeimage
+    buildsystem: simple
+    build-options:
+      cflags: -DHAVE_UNISTD_H -D_byteswap_ulong=__builtin_bswap32 -DPNG_ARM_NEON_OPT=0
+      cxxflags: -std=gnu++11 -DHAVE_UNISTD_H -D_byteswap_ulong=__builtin_bswap32 -DPNG_ARM_NEON_OPT=0
+      arch:
+        aarch64:
+          cflags: -fPIC
+          cxxflags: -fPIC
+    build-commands:
+      - make -j${FLATPAK_BUILDER_N_JOBS}
+      - install -Dm644 Source/FreeImage.h /app/include/FreeImage.h
+      - install -Dm644 Source/FreeImageIO.h /app/include/FreeImageIO.h
+      - install -Dm644 libfreeimage.a /app/lib/libfreeimage.a
+      - install -Dm755 libfreeimage-3.18.0.so /app/lib/libfreeimage-3.18.0.so
+      - ln -sf libfreeimage-3.18.0.so /app/lib/libfreeimage.so.3
+      - ln -sf libfreeimage.so.3 /app/lib/libfreeimage.so
+    sources:
+      - type: archive
+        url: https://prdownloads.sourceforge.net/freeimage/FreeImage3180.zip
+        sha256: f41379682f9ada94ea7b34fe86bf9ee00935a3147be41b6569c9605a53e438fd
+      - type: patch
+        path: tools/flatpak/patches/freeimage-wchar.patch
+
+  - name: angelscript
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DBUILD_SHARED_LIBS=ON
+    sources:
+      - type: git
+        url: https://github.com/AnotherFoxGuy/angelscript.git
+        commit: 762ab0343a71883d265fcd2e14e0bded02b50a91
+
+  - name: socketw
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DBUILD_SHARED_LIBS=ON
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    sources:
+      - type: archive
+        url: https://github.com/RigsOfRods/socketw/archive/refs/tags/3.11.0.tar.gz
+        sha256: 394203af6eabe27dec383fffbcb106bd75e91bf65a07d69e8f2d37d6c4f08371
+
+  - name: ogre
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DOGRE_BUILD_DEPENDENCIES=OFF
+      - -DOGRE_DEPENDENCIES_DIR=/app
+      - -DOGRE_BUILD_COMPONENT_BITES=ON
+      - -DOGRE_BUILD_COMPONENT_CSHARP=OFF
+      - -DOGRE_BUILD_COMPONENT_JAVA=OFF
+      - -DOGRE_BUILD_COMPONENT_PYTHON=OFF
+      - -DOGRE_BUILD_COMPONENT_VOLUME=OFF
+      - -DOGRE_BUILD_PLUGIN_BSP=OFF
+      - -DOGRE_BUILD_PLUGIN_PCZ=OFF
+      - -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=OFF
+      - -DOGRE_BUILD_SAMPLES=OFF
+      - -DOGRE_BUILD_TOOLS=ON
+      - -DOGRE_RESOURCEMANAGER_STRICT=0
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    build-options:
+      arch:
+        x86_64:
+          config-opts:
+            - -DOGRE_BUILD_PLUGIN_CG=ON
+        aarch64:
+          config-opts:
+            - -DOGRE_BUILD_PLUGIN_CG=OFF
+    sources:
+      - type: archive
+        url: https://github.com/AnotherFoxGuy/ogre/archive/refs/tags/1.11.6.1.tar.gz
+        sha256: 31c84051ffe9a3710c553cfa27ebda7b176c9dfe3b4d2a113d4f02caf48ecd5b
+
+  - name: mygui
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DMYGUI_BUILD_DEMOS=OFF
+      - -DMYGUI_BUILD_DOCS=OFF
+      - -DMYGUI_BUILD_TEST_APP=OFF
+      - -DMYGUI_BUILD_TOOLS=OFF
+      - -DMYGUI_BUILD_PLUGINS=NO
+      - -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON
+      - -DCMAKE_PREFIX_PATH=/app
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    sources:
+      - type: archive
+        url: https://github.com/MyGUI/mygui/archive/refs/tags/MyGUI3.4.0.tar.gz
+        sha256: d1d5f294670ae71f7200ed4b30859018281d8cfd45d6a38d18b97a4aba604c42
+
+  - name: caelum
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCaelum_BUILD_SAMPLES=FALSE
+      - -DINSTALL_OGRE_PLUGIN=OFF
+      - -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON
+      - -DCMAKE_PREFIX_PATH=/app
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    sources:
+      - type: archive
+        url: https://github.com/RigsOfRods/ogre-caelum/archive/70fcf62f306288c9472cc03a42367c9625c839ea.zip
+        sha256: b4b4b6fe2997c3da4537ada2ab69032647e65773886e57c9803fc90aac2dd158
+
+  - name: pagedgeometry
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DPAGEDGEOMETRY_BUILD_SAMPLES=OFF
+      - -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON
+      - -DCMAKE_PREFIX_PATH=/app
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    sources:
+      - type: archive
+        url: https://github.com/OGRECave/ogre-pagedgeometry/archive/7c9295f771e8c7973efc04d53283978ccd44fc9b.zip
+        sha256: 513043eecf1aaf6f8b2335c953b0664128aa492007fe3d93068e5f4be436093a
+
+  - name: rigs-of-rods
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_PREFIX=/app
+      - -DROR_DEPENDENCY_DIR=/app
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+      - -DOIS_INCLUDE_DIR=/app/include/ois
+      - -DOIS_LIBRARY=/app/lib/libOIS.so
+      - -DOGRE_PLUGIN_DIR=/app/lib/OGRE
+    build-commands:
+      - cmake --build . --parallel
+      - cmake --install .
+      - strip --strip-unneeded /app/RoR
+      - cp -f tools/flatpak/plugins.cfg source/main/plugins.cfg.in
+      - install -Dm644 tools/flatpak/rigsofrods.desktop /app/share/applications/org.rigsofrods.RigsOfRods.desktop
+      - install -Dm644 RoR_Logo_TT.svg /app/share/icons/hicolor/scalable/apps/org.rigsofrods.RigsOfRods.svg
+      - install -Dm644 org.rigsofrods.RigsOfRods.metainfo.xml /app/share/metainfo/org.rigsofrods.RigsOfRods.metainfo.xml
+      - install -Dm755 ror-wrapper.sh /app/bin/RoR
+    sources:
+      - type: dir
+        path: .
+      - type: file
+        url: https://docs.rigsofrods.org/images/branding/RoR_Logo_TT.svg
+        sha256: a1743714a73b6f93a0ed02cda3fcf514d14c6a7db1d9be004da2039dea2fb242
+      - type: script
+        dest-filename: ror-wrapper.sh
+        commands:
+          - export SNAP_USER_COMMON=${XDG_DATA_HOME}/rigsofrods
+          - exec /app/RoR $@
+
+cleanup:
+  - /RunRoR
+  - /.itch.toml
+  - /include
+  - /lib/cmake
+  - /lib/pkgconfig
+  - /share/aclocal
+  - /share/man
+  - /share/doc
+  - /share/Cg
+  - /share/OGRE
+  - /share/openal
+  - /lib/*.a
+  - /lib/*.la

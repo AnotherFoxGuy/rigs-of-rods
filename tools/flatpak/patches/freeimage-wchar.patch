@@ -1,0 +1,10 @@
+--- a/Source/LibJXR/jxrgluelib/JXRGlueJxr.c
++++ b/Source/LibJXR/jxrgluelib/JXRGlueJxr.c
+@@ -27,6 +27,7 @@
+ //
+ //*@@@---@@@@******************************************************************
+ #include <limits.h>
++#include <wchar.h>
+ #include <JXRGlue.h>
+ 
+ 
